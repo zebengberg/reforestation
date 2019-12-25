@@ -33,24 +33,7 @@ class Forest {
 		}
 	}
 
-	// Kill all trees in some big region if the user clicks.
-	clearCut() {
-		canvas.addEventListener('click', function(event) {
-			var x = event.clientX;
-			var y = event.clientY;
-			var threshold = Math.min(window.innerWidth, window.innerHeight) / 2;
-			for (var i = 0; i < forest.treeArray.length; i++) {
-				var tree = forest.treeArray[i];
-				var distance = Math.abs(tree.x - x, 2) + Math.abs(tree.y - y, 2);
-				if (distance < threshold) {
-					tree.isAlive = false;
-					tree.draw();
-				}
-			}
-		})
-	}
-
-  // Grow and draw every tree in the forest.
+	// Grow and draw every tree in the forest.
 	grow() {
 		for (var i = 0; i < this.treeArray.length; i++) {
 			var tree = this.treeArray[i];
@@ -61,11 +44,17 @@ class Forest {
 		}
 	}
 
-	// Update forest.
-	update() {
-		this.clearCut();
-		this.birthTree();
-		this.grow();
+	// Kill all trees in some big region centered at (x, y)
+	clearCut(x, y) {
+		var threshold = Math.min(window.innerWidth, window.innerHeight) / 2;
+		for (var i = 0; i < this.treeArray.length; i++) {
+			var tree = this.treeArray[i];
+			var distance = Math.abs(tree.x - x, 2) + Math.abs(tree.y - y, 2);
+			if (distance < threshold) {
+				tree.isAlive = false;
+				tree.draw();
+			}
+		}
 	}
 }
 
@@ -102,13 +91,22 @@ class Tree {
 			this.isAlive = false;
 		}
 	}
-	//getNeighbors() {
-    // something with setting crowded
-	//}
 }
 
 
-// Animate the forest.
 var forest = new Forest;
-var update = function() {forest.update()};
+// Clear cut after user click.
+var doOnClick = function(event) {
+	console.log('Total trees: ' + forest.treeArray.length);
+	var x = event.clientX;
+	var y = event.clientY;
+	forest.clearCut(x, y);
+}
+canvas.addEventListener('click', doOnClick);
+
+// Animate the forest.
+var update = function() {
+	forest.birthTree(2);
+	forest.grow();
+};
 setInterval(update, 100);
