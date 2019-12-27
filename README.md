@@ -1,6 +1,6 @@
 # reforestation
 
->A simulation of tree growth in a forest. [<<Click here to see it.>>](zebengberg.github.io/reforestation)
+>A simulation of tree growth in a forest. [<Click here to see it.>](zebengberg.github.io/reforestation)
 
 
 ## Motivation
