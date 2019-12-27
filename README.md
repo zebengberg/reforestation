@@ -1,6 +1,6 @@
 # reforestation
 
->A simulation of tree growth in a forest. (<Click here to watch.>)[zebengberg.github.io/reforestation]
+>A simulation of tree growth in a forest. [<<Click here to see it.>>](zebengberg.github.io/reforestation)
 
 
 ## Motivation
@@ -10,7 +10,7 @@ After a forest is destroyed, new trees will begin to grow and compete for space.
 
 ## Simulation
 
-In (this simulation)[zebengberg.github.io/reforestation], we have several different species of trees growing in a forest. The different species are distinguished with different colors, and each has its own growth rate and expected lifespan. These two quantities exist in opposition to one another: the faster a tree grows, the shorter its expected lifespan.
+In [this simulation](zebengberg.github.io/reforestation), we have several different species of trees growing in a forest. The different species are distinguished with different colors, and each has its own growth rate and expected lifespan. These two quantities exist in opposition to one another: the faster a tree grows, the shorter its expected lifespan.
 
 At each step, several actions take place.
 - If available space exists, new trees are born in random positions. These new trees are assigned a species randomly.
@@ -27,7 +27,7 @@ Every tree displayed on the html canvas is an instance of class `Tree`. The enti
 
 ## Algorithm
 
-The most computationally-interesting aspect of this program is the calculation of the nearest neighbor of each tree. Classically, problems involving neighbors in a network have been well-studied. In this particular project, I am tasked with an *all nearest neighbor*-style problem: for each tree, I must calculate the distance to the nearest neighbor. In the naive algorithm, if there are **n** trees, each tree would be compared with every other tree to find its nearest neighbor. This procedure would require **O(n^2)** steps. There are more efficient general procedures such as (*Vaidya's algorithm*)[https://link.springer.com/article/10.1007/BF02187718] which require only **O(n log(n))** steps. This run-time is optimal up to a constant factor.
+The most computationally-interesting aspect of this program is the calculation of the nearest neighbor of each tree. Classically, problems involving neighbors in a network have been well-studied. In this particular project, I am tasked with an *all nearest neighbor*-style problem: for each tree, I must calculate the distance to the nearest neighbor. In the naive algorithm, if there are **n** trees, each tree would be compared with every other tree to find its nearest neighbor. This procedure would require **O(n^2)** steps. There are more efficient general procedures such as [*Vaidya's algorithm*](https://link.springer.com/article/10.1007/BF02187718) which require only **O(n log(n))** steps. This run-time is optimal up to a constant factor.
 
 In this project, we need to calculate nearest neighbor distances in order to prevent trees from overlapping. Moreover, trees are constrained to have a maximum possible radius. This second property can be algorithmically exploited: If two trees are further apart than twice the maximum possible radius, then it will not be possible for these two trees to overlap after growing. In this way, we only need to calculate the distance between a given tree and those trees in the immediate vicinity.
 
