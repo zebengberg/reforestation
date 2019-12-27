@@ -12,8 +12,8 @@ class Forest {
   constructor() {
     this.nTrees = 5;
     this.treeGrowths = [.1, .3, .5, .7, .9];
-    this.treeColors = ['MidnightBlue', 'SeaGreen', 'Gold',
-                       'DarkOrange', 'FireBrick'];
+    this.treeColors = ['Turquoise', 'SeaGreen', 'Gold',
+                       'DarkOrange', 'DeepPink'];
     this.treeArray = [];  // will populate with all trees
     this.maxRadius = 50;
     this.boxDict = {};  // boxDict[u, v] will hold trees near (u, v) box-coord
@@ -111,7 +111,7 @@ class Forest {
 
   // Print summary metrics for the forest.
   printMetrics() {
-    let colorSummary = {}
+    let colorSummary = {};
     for (let color of this.treeColors) {
       colorSummary[color] = 0;
     }
@@ -119,13 +119,25 @@ class Forest {
       let area = Math.PI * Math.pow(tree.r, 2);
       colorSummary[tree.color] += area;
     }
+    // Convert colorSummary dict to array of pairs so we can sort.
+    colorSummary = Object.keys(colorSummary).map(function(key) {
+      return [key, colorSummary[key]]
+    });
+    // Sort colorSummary array based on the second element
+    colorSummary.sort(function(first, second) {
+      return second[1] - first[1];
+    });
     c.fillStyle = 'rgba(245, 245, 245, 255)';
     c.fillRect(0, 0, 100, 150);
     let vertPos = 20;
     c.font = 'bold 20px sans-serif'
-    for (let color in colorSummary) {
-      c.fillStyle = color;
-      c.fillText(Math.floor(colorSummary[color]), 20, vertPos);
+    for (let pair of colorSummary) {
+      let text = Math.floor(pair[1]);
+      c.strokeStyle = 'black';
+      c.lineWidth = 4;
+      c.strokeText(text, 20, vertPos);
+      c.fillStyle = pair[0];
+      c.fillText(text, 20, vertPos);
       vertPos += 30;
     }
   }
@@ -173,6 +185,7 @@ class Tree {
     }
     c.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
     if (this.isAlive) {  // give the trees a black outline
+      c.lineWidth = 2;
       c.strokeStyle = 'black';
       c.stroke();
     }
@@ -207,7 +220,7 @@ canvas.addEventListener('click', doOnClick);
 let update = function() {
   // Increasing the number of births will result in smaller trees. The number
   // of births and the constant in front of the deathProb should be inverse.
-  forest.birthTree(3);
+  forest.birthTree(2);
   forest.buildBoxDict();
   forest.setClosestNeighborDist();
   forest.grow();
