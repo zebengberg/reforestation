@@ -220,7 +220,7 @@ canvas.addEventListener('click', doOnClick);
 let update = function() {
   // Increasing the number of births will result in smaller trees. The number
   // of births and the constant in front of the deathProb should be inverse.
-  forest.birthTree(2);
+  forest.birthTree(3);
   forest.buildBoxDict();
   forest.setClosestNeighborDist();
   forest.grow();
@@ -228,4 +228,4 @@ let update = function() {
 };
 
 // Applying function update after every n milliseconds.
-setInterval(update, 50);
+setInterval(update, 10);
