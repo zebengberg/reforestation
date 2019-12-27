@@ -1,6 +1,6 @@
 # reforestation
 
->A simulation of tree growth in a forest. [Click here to see it.](zebengberg.github.io/reforestation)
+>A simulation of tree growth in a forest. [Click here to see it.](http://zebengberg.github.io/reforestation)
 
 
 ## Motivation
@@ -10,7 +10,7 @@ After a forest is destroyed, new trees will begin to grow and compete for space.
 
 ## Simulation
 
-In [this simulation](zebengberg.github.io/reforestation), we have several different species of trees growing in a forest. The different species are distinguished with different colors, and each has its own growth rate and expected lifespan. These two quantities exist in opposition to one another: the faster a tree grows, the shorter its expected lifespan.
+In [this simulation](https://zebengberg.github.io/reforestation), we have several different species of trees growing in a forest. The different species are distinguished with different colors, and each has its own growth rate and expected lifespan. These two quantities exist in opposition to one another: the faster a tree grows, the shorter its expected lifespan.
 
 At each step, several actions take place.
 - If available space exists, new trees are born in random positions. These new trees are assigned a species randomly.
