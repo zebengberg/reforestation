@@ -1,24 +1,13 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-
-
-
   <head>
-    <meta charset="utf-8">
-    <title>Reforestation</title>
     <style type="text/css">
-      canvas {
-        border: 1px solid black;
-      }
-      body {
-        margin: 0;
-      }
+      canvas {border: 2px solid black}
+      body {margin: 0}
     </style>
   </head>
-  <body>
-
-  </body>
 </html>
+
 <body>
   <canvas id='forestCanvas'></canvas>
   <canvas id='userCanvas'></canvas>
@@ -37,7 +26,9 @@
   </div>
   <div>
     <input type='range' id='seedSlider'>
-    <label id='seedLabel'> Uniformity of Seedlings </label>
+    <label id='seedLabel'> Uniformity of Seedlings: To what extent should a new
+      seed depend on its neighbors?
+    </label>
   </div>
 
   <script src='reforestation.js'></script>
