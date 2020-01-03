@@ -4,7 +4,7 @@ canvas.height = window.innerHeight;
 let c = canvas.getContext('2d');
 // Fill the background white so we can paint over dead trees with background color.
 c.fillStyle = 'rgba(255, 255, 255, 255)';
-c.fillRect(0, 0, window.innerWidth, window.innerHeight);
+c.fillRect(0, 0, canvas.width, canvas.height);
 
 
 // Keeps track of all trees and forest-wide parameters.
@@ -66,8 +66,8 @@ class Forest {
   // Give birth to n new trees if space is available.
   birthTree(n = 1) {
     for (let i = 0; i < n; i++) {
-      let x = Math.random() * window.innerWidth;
-      let y = Math.random() * window.innerHeight;
+      let x = Math.random() * canvas.width;
+      let y = Math.random() * canvas.height;
       // Determining if there is a tree at (x, y)
       let pixelRGBA = c.getImageData(x, y, 1, 1);
       let colorValue = pixelRGBA.data[0] + pixelRGBA.data[1]
@@ -99,7 +99,7 @@ class Forest {
 
   // Kill all trees in some big region centered at (x, y)
   clearCut(x, y) {
-    let threshold = Math.min(window.innerWidth, window.innerHeight) / 4;
+    let threshold = Math.min(canvas.width, canvas.height) / 4;
     for (let tree of this.treeArray) {
       let dist = Math.sqrt(Math.pow(tree.x - x, 2) + Math.pow(tree.y - y, 2));
       if (dist < threshold) {
@@ -161,10 +161,19 @@ class Tree {
     this.isAlive = true;
   }
 
-  // Grow the tree and determine if stil alive.
+  // Grow the tree and determine if still alive.
   grow() {
-    // Growing r with some random noise. Don't grow into neighbors.
-    if ((this.r < this.maxRadius) && (this.r < this.closestNeighborDist)) {
+    // Growing r with some random noise.
+    // Don't grow beyond edge of canvas. Don't grow into neighbors.
+
+    let growBool = this.r < this.maxRadius
+                   && this.r < this.closestNeighborDist
+                   && this.x - this.r >= 0
+                   && this.y - this.r >= 0
+                   && this.x + this.r <= canvas.width
+                   && this.y + this.r <= canvas.height;
+
+    if (growBool) {
       this.r += this.growthRate * Math.random() / 5;
     }
     // Square the growthRate to bring it even closer to 0.
