@@ -1,10 +1,20 @@
-let canvas = document.querySelector('canvas');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-let c = canvas.getContext('2d');
+let canvases = document.getElementsByTagName('canvas');
+
+let forestCanvas = canvases[0];
+forestCanvas.width = window.innerWidth;
+forestCanvas.height = window.innerHeight - 210;  // saving room at bottom
+let c = forestCanvas.getContext('2d');
 // Fill the background white so we can paint over dead trees with background color.
 c.fillStyle = 'rgba(255, 255, 255, 255)';
-c.fillRect(0, 0, canvas.width, canvas.height);
+c.fillRect(0, 0, forestCanvas.width, forestCanvas.height);
+
+let userCanvas = canvases[1];
+userCanvas.width = window.innerWidth;
+userCanvas.height = 200;
+userCanvas.style.position = 'absolute';  // Right Here!
+userCanvas.style.left = 0;
+userCanvas.style.top = forestCanvas.height;
+let c2 = userCanvas.getContext('2d');
 
 
 // Keeps track of all trees and forest-wide parameters.
@@ -17,6 +27,17 @@ class Forest {
     this.treeArray = [];  // will populate with all trees
     this.maxRadius = 50;
     this.boxDict = {};  // boxDict[u, v] will hold trees near (u, v) box-coord
+
+    // Keeping track of summary statistics over time.
+    // Each colorDict will hold the total area of trees of a given color.
+    this.stats = [];
+    for (let i = 0; i < 500; i++) {
+      let colorDict = {};
+      for (let color of this.treeColors) {
+        colorDict[color] = 0;
+      }
+      this.stats.push(colorDict);
+    }
   }
 
   // Build the boxes needed to calculated all nearest neighbors.
@@ -66,8 +87,8 @@ class Forest {
   // Give birth to n new trees if space is available.
   birthTree(n = 1) {
     for (let i = 0; i < n; i++) {
-      let x = Math.random() * canvas.width;
-      let y = Math.random() * canvas.height;
+      let x = Math.random() * forestCanvas.width;
+      let y = Math.random() * forestCanvas.height;
       // Determining if there is a tree at (x, y)
       let pixelRGBA = c.getImageData(x, y, 1, 1);
       let colorValue = pixelRGBA.data[0] + pixelRGBA.data[1]
@@ -99,7 +120,7 @@ class Forest {
 
   // Kill all trees in some big region centered at (x, y)
   clearCut(x, y) {
-    let threshold = Math.min(canvas.width, canvas.height) / 4;
+    let threshold = Math.min(forestCanvas, forestCanvas) / 4;
     for (let tree of this.treeArray) {
       let dist = Math.sqrt(Math.pow(tree.x - x, 2) + Math.pow(tree.y - y, 2));
       if (dist < threshold) {
@@ -109,36 +130,43 @@ class Forest {
     }
   }
 
-  // Print summary metrics for the forest.
-  printMetrics() {
-    let colorSummary = {};
+  // Update statistics.
+  updateStats() {
+    this.stats.shift();  // remove first element from this.stats
+    let colorDict = {};  // creating new colorDict to push to this.stats
     for (let color of this.treeColors) {
-      colorSummary[color] = 0;
+      colorDict[color] = 0;
     }
     for (let tree of this.treeArray) {
       let area = Math.PI * Math.pow(tree.r, 2);
-      colorSummary[tree.color] += area;
+      colorDict[tree.color] += area;
     }
-    // Convert colorSummary dict to array of pairs so we can sort.
-    colorSummary = Object.keys(colorSummary).map(function(key) {
-      return [key, colorSummary[key]]
-    });
-    // Sort colorSummary array based on the second element
-    colorSummary.sort(function(first, second) {
-      return second[1] - first[1];
-    });
-    c.fillStyle = 'rgba(245, 245, 245, 255)';
-    c.fillRect(0, 0, 100, 150);
-    let vertPos = 20;
-    c.font = 'bold 20px sans-serif'
-    for (let pair of colorSummary) {
-      let text = Math.floor(pair[1]);
-      c.strokeStyle = 'black';
-      c.lineWidth = 4;
-      c.strokeText(text, 20, vertPos);
-      c.fillStyle = pair[0];
-      c.fillText(text, 20, vertPos);
-      vertPos += 30;
+    // Converting the areas to proportions of canvas area.
+    for (let color in colorDict) {
+      colorDict[color] /= forestCanvas.width * forestCanvas.height;
+    }
+    this.stats.push(colorDict);
+  }
+
+  // Graph the stats over time.
+  graphStats() {
+    c2.clearRect(0, 0, this.stats.length + 1, userCanvas.height + 1);
+    for (let color of this.treeColors) {
+      let t = 0;
+      for (let colorDict of this.stats) {
+        if (t == 0) {
+          c2.beginPath();  // starting path
+          // arbitrary constant 1500 -- to scale the y-values appropriately
+          c2.moveTo(t, userCanvas.height - 1500 * colorDict[color]);
+          t++;
+        } else {
+          c2.lineTo(t, userCanvas.height - 1500 * colorDict[color]);
+          t++;
+        }
+      }
+      c2.lineWidth = 2;
+      c2.strokeStyle = color;
+      c2.stroke();
     }
   }
 }
@@ -170,14 +198,14 @@ class Tree {
                    && this.r < this.closestNeighborDist
                    && this.x - this.r >= 0
                    && this.y - this.r >= 0
-                   && this.x + this.r <= canvas.width
-                   && this.y + this.r <= canvas.height;
+                   && this.x + this.r <= forestCanvas.width
+                   && this.y + this.r <= forestCanvas.height;
 
     if (growBool) {
       this.r += this.growthRate * Math.random() / 5;
     }
-    // Square the growthRate to bring it even closer to 0.
-    this.deathProb += Math.pow(this.growthRate, 2) / Math.pow(10, 5);
+    // Raise the growthRate to small power to bring it even closer to 0.
+    this.deathProb += Math.pow(this.growthRate, 1.3) / Math.pow(10, 5);
     if (Math.random() < this.deathProb) {  // tree dies
       this.isAlive = false;
     }
@@ -223,7 +251,7 @@ let doOnClick = function(event) {
   let y = event.clientY;
   forest.clearCut(x, y);
 }
-canvas.addEventListener('click', doOnClick);
+forestCanvas.addEventListener('click', doOnClick);
 
 // Animate the forest.
 let update = function() {
@@ -233,8 +261,9 @@ let update = function() {
   forest.buildBoxDict();
   forest.setClosestNeighborDist();
   forest.grow();
-  forest.printMetrics();
+  forest.updateStats();
+  forest.graphStats();
 };
 
 // Applying function update after every n milliseconds.
-setInterval(update, 10);
+setInterval(update, 1);
