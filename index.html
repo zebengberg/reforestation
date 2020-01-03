@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
+
+
+
   <head>
     <meta charset="utf-8">
     <title>Reforestation</title>
@@ -17,7 +20,25 @@
   </body>
 </html>
 <body>
-  <canvas></canvas>
-  <canvas></canvas>
-  <script src="reforestation.js"></script>
+  <canvas id='forestCanvas'></canvas>
+  <canvas id='userCanvas'></canvas>
+
+  <div>
+    <input type='range' id='birthSlider'>
+    <label id='birthLabel'> Birth Rate </label>
+  </div>
+  <div>
+    <input type='range' id='deathSlider'>
+    <label id='deathLabel'> Death Rate </label>
+  </div>
+  <div>
+    <input type='range' id='speciesSlider'>
+    <label id='speciesLabel'> Number of Species </label>
+  </div>
+  <div>
+    <input type='range' id='seedSlider'>
+    <label id='seedLabel'> Uniformity of Seedlings </label>
+  </div>
+
+  <script src='reforestation.js'></script>
 </body>

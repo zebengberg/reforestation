@@ -1,6 +1,4 @@
-let canvases = document.getElementsByTagName('canvas');
-
-let forestCanvas = canvases[0];
+let forestCanvas = document.getElementById('forestCanvas');
 forestCanvas.width = window.innerWidth;
 forestCanvas.height = window.innerHeight - 210;  // saving room at bottom
 let c = forestCanvas.getContext('2d');
@@ -8,13 +6,57 @@ let c = forestCanvas.getContext('2d');
 c.fillStyle = 'rgba(255, 255, 255, 255)';
 c.fillRect(0, 0, forestCanvas.width, forestCanvas.height);
 
-let userCanvas = canvases[1];
-userCanvas.width = window.innerWidth;
+let userCanvas = document.getElementById('userCanvas');
+userCanvas.width = .6 * window.innerWidth;
 userCanvas.height = 200;
-userCanvas.style.position = 'absolute';  // Right Here!
-userCanvas.style.left = 0;
+userCanvas.style.position = 'absolute';
+userCanvas.style.left = '5px';
 userCanvas.style.top = forestCanvas.height;
 let c2 = userCanvas.getContext('2d');
+
+
+let birthLabel = document.getElementById('birthLabel');
+birthLabel.style.position = 'absolute';
+birthLabel.style.left = userCanvas.width + 150 + 'px';
+birthLabel.style.top = forestCanvas.height + 10 +  'px';
+let birthSlider = document.getElementById('birthSlider');
+birthSlider.style.position = 'absolute';
+birthSlider.style.left = userCanvas.width + 10 + 'px';
+birthSlider.style.top = forestCanvas.height + 10 + 'px';
+birthSlider.min = 0;
+birthSlider.max = 20;
+birthSlider.value = 3;
+
+let deathLabel = document.getElementById('deathLabel');
+deathLabel.style.position = 'absolute';
+deathLabel.style.left = userCanvas.width + 150 + 'px';
+deathLabel.style.top = 1.1 * forestCanvas.height + 10 +  'px';
+let deathSlider = document.getElementById('deathSlider');
+deathSlider.style.position = 'absolute';
+deathSlider.style.left = userCanvas.width + 10 + 'px';
+deathSlider.style.top = 1.1 * forestCanvas.height + 10 + 'px';
+deathSlider.min = 0;
+deathSlider.max = 100;
+deathSlider.value = 10;
+
+
+let speciesLabel = document.getElementById('speciesLabel');
+speciesLabel.style.position = 'absolute';
+speciesLabel.style.left = userCanvas.width + 150 + 'px';
+speciesLabel.style.top = 1.2 * forestCanvas.height + 10 +  'px';
+let speciesSlider = document.getElementById('speciesSlider');
+speciesSlider.style.position = 'absolute';
+speciesSlider.style.left = userCanvas.width + 10 + 'px';
+speciesSlider.style.top = 1.2 * forestCanvas.height + 10 + 'px';
+
+let seedLabel = document.getElementById('seedLabel');
+seedLabel.style.position = 'absolute';
+seedLabel.style.left = userCanvas.width + 150 + 'px';
+seedLabel.style.top = 1.3 * forestCanvas.height + 10 +  'px';
+let seedSlider = document.getElementById('seedSlider');
+seedSlider.style.position = 'absolute';
+seedSlider.style.left = userCanvas.width + 10 + 'px';
+seedSlider.style.top = 1.3 * forestCanvas.height + 10 + 'px';
 
 
 // Keeps track of all trees and forest-wide parameters.
@@ -31,7 +73,7 @@ class Forest {
     // Keeping track of summary statistics over time.
     // Each colorDict will hold the total area of trees of a given color.
     this.stats = [];
-    for (let i = 0; i < 500; i++) {
+    for (let i = 0; i < userCanvas.width; i++) {
       let colorDict = {};
       for (let color of this.treeColors) {
         colorDict[color] = 0;
@@ -120,7 +162,7 @@ class Forest {
 
   // Kill all trees in some big region centered at (x, y)
   clearCut(x, y) {
-    let threshold = Math.min(forestCanvas, forestCanvas) / 4;
+    let threshold = Math.min(forestCanvas.width, forestCanvas.height) / 4;
     for (let tree of this.treeArray) {
       let dist = Math.sqrt(Math.pow(tree.x - x, 2) + Math.pow(tree.y - y, 2));
       if (dist < threshold) {
@@ -156,11 +198,12 @@ class Forest {
       for (let colorDict of this.stats) {
         if (t == 0) {
           c2.beginPath();  // starting path
-          // arbitrary constant 1500 -- to scale the y-values appropriately
-          c2.moveTo(t, userCanvas.height - 1500 * colorDict[color]);
+          // Arbitrary constant 1500 used to scale the y-values appropriately.
+          // Using max with 0 to prevent graph from going off the canvas.
+          c2.moveTo(t, Math.max(userCanvas.height - 1500 * colorDict[color], 0));
           t++;
         } else {
-          c2.lineTo(t, userCanvas.height - 1500 * colorDict[color]);
+          c2.lineTo(t, Math.max(userCanvas.height - 1500 * colorDict[color], 0));
           t++;
         }
       }
@@ -205,7 +248,7 @@ class Tree {
       this.r += this.growthRate * Math.random() / 5;
     }
     // Raise the growthRate to small power to bring it even closer to 0.
-    this.deathProb += Math.pow(this.growthRate, 1.3) / Math.pow(10, 5);
+    this.deathProb += deathSlider.value * Math.pow(this.growthRate, 1.3) / Math.pow(10, 6);
     if (Math.random() < this.deathProb) {  // tree dies
       this.isAlive = false;
     }
@@ -257,7 +300,7 @@ forestCanvas.addEventListener('click', doOnClick);
 let update = function() {
   // Increasing the number of births will result in smaller trees. The number
   // of births and the constant in front of the deathProb should be inverse.
-  forest.birthTree(3);
+  forest.birthTree(birthSlider.value);
   forest.buildBoxDict();
   forest.setClosestNeighborDist();
   forest.grow();
@@ -266,4 +309,4 @@ let update = function() {
 };
 
 // Applying function update after every n milliseconds.
-setInterval(update, 1);
+setInterval(update, 20);
