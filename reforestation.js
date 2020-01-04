@@ -1,8 +1,9 @@
+// Getting, setting, repositioning, and labeling HTML objects.
+
 let forestCanvas = document.getElementById('forestCanvas');
 forestCanvas.width = window.innerWidth;
 forestCanvas.height = window.innerHeight - 210;  // saving room at bottom
 let c = forestCanvas.getContext('2d');
-
 
 let userCanvas = document.getElementById('userCanvas');
 userCanvas.width = .6 * window.innerWidth;
@@ -16,7 +17,7 @@ let birthLabel = document.getElementById('birthLabel');
 birthLabel.style.position = 'absolute';
 birthLabel.style.left = userCanvas.width + 150 + 'px';
 birthLabel.style.top = forestCanvas.height + 10 + 'px';
-birthLabel.innerText = 'Birth rate'
+birthLabel.innerText = 'BIRTH RATE';
 
 let birthSlider = document.getElementById('birthSlider');
 birthSlider.style.position = 'absolute';
@@ -30,7 +31,7 @@ let deathLabel = document.getElementById('deathLabel');
 deathLabel.style.position = 'absolute';
 deathLabel.style.left = userCanvas.width + 150 + 'px';
 deathLabel.style.top = forestCanvas.height + 50 + 'px';
-deathLabel.innerText = 'Death rate: will mostly effect newborns.';
+deathLabel.innerText = 'DEATH RATE';
 
 let deathSlider = document.getElementById('deathSlider');
 deathSlider.style.position = 'absolute';
@@ -40,12 +41,11 @@ deathSlider.min = 0;
 deathSlider.max = 6;
 deathSlider.value = 3;
 
-
 let speciesLabel = document.getElementById('speciesLabel');
 speciesLabel.style.position = 'absolute';
 speciesLabel.style.left = userCanvas.width + 150 + 'px';
 speciesLabel.style.top = forestCanvas.height + 90 + 'px';
-speciesLabel.innerText = 'Number of tree species: moving this will reset forest.';
+speciesLabel.innerText = 'NUMBER OF SPECIES: moving this will reset forest';
 
 let speciesSlider = document.getElementById('speciesSlider');
 speciesSlider.style.position = 'absolute';
@@ -59,22 +59,22 @@ let seedLabel = document.getElementById('seedLabel');
 seedLabel.style.position = 'absolute';
 seedLabel.style.left = userCanvas.width + 150 + 'px';
 seedLabel.style.top = forestCanvas.height + 130 + 'px';
-seedLabel.innerText = 'Uniformity of Seedlings: to what extent should a '
-                      + 'new seed depend on its neighbors?';
+seedLabel.innerText = 'SEEDLING BIRTH: To what extent should a '
+                      + 'new seed depend on its parent neighbors?';
 
 let seedSlider = document.getElementById('seedSlider');
 seedSlider.style.position = 'absolute';
 seedSlider.style.left = userCanvas.width + 10 + 'px';
 seedSlider.style.top = forestCanvas.height + 130 + 'px';
 seedSlider.min = -1;
-seedSlider.max = 2;
-seedSlider.value = 1;
+seedSlider.max = 1;
+seedSlider.value = 0;
 
 let updateLabel = document.getElementById('updateLabel');
 updateLabel.style.position = 'absolute';
 updateLabel.style.left = userCanvas.width + 150 + 'px';
 updateLabel.style.top = forestCanvas.height + 170 + 'px';
-updateLabel.innerText = 'Update rate.';
+updateLabel.innerText = 'ANIMATION UPDATE RATE';
 
 let updateSlider = document.getElementById('updateSlider');
 updateSlider.style.position = 'absolute';
@@ -83,7 +83,6 @@ updateSlider.style.top = forestCanvas.height + 170 + 'px';
 updateSlider.min = 0;
 updateSlider.max = 6;
 updateSlider.value = 3;
-
 
 
 
@@ -156,7 +155,7 @@ function setClosestNeighborDist() {
     let key = [tree.u, tree.v];
     tree.closestNeighborDist = Infinity;
     for (let closeTree of boxDict[key]) {
-      let candidate = tree.distance(closeTree, true);
+      let candidate = tree.getDistance(closeTree, true);
       // Need candidate > 0 in order to exclude tree iteself
       if (candidate < tree.closestNeighborDist && candidate > 0) {
         tree.closestNeighborDist = candidate;
@@ -183,19 +182,20 @@ function birthTree(n = 1) {
       if ((seedSlider.value > -1) && ([u, v] in boxDict)) { // seedling has neighbors
         // Building speciesDict to count species of neighboring trees
         let speciesDict = {};
-        for (let species of treeSpecies) {
-          speciesDict[species] = 0;
-        }
-        // Populating speciesDict
         let totalNeighborArea = 0;
+        for (let species of treeSpecies) {
+          if (seedSlider.value == 0) {
+            speciesDict[species] = 10;  // giving all species a chance
+            totalNeighborArea += 10;
+          } else {
+            speciesDict[species] = 0;
+          }
+        }
         for (let tree of boxDict[[u, v]]) {
-          // Using a sort of Lp norm to weight the neighbors.
-          // With seedSlider.value = 0, weighting just counts neighbors.
-          // With seedSlider.value = 1, weighting by neighbor's area.
-          // With seedSlider.value = 2, weighting by area ^ 2.
-          let weightedArea = Math.pow(tree.getArea(), seedSlider.value);
-          speciesDict[tree.species] += weightedArea;
-          totalNeighborArea += weightedArea;
+          // Weight according to neighbor area.
+          // Could instead use some Lp weighting: weight by sum of powers of areas.
+          speciesDict[tree.species] += tree.getArea();
+          totalNeighborArea += tree.getArea();
         }
         for (let species in speciesDict) {
           speciesDict[species] /= totalNeighborArea;
@@ -313,11 +313,6 @@ class Tree {
     this.isAlive = true;
   }
 
-  // Return the area of the tree.
-  getArea() {
-    return Math.PI * Math.pow(this.r, 2);
-  }
-
   // Grow the tree and determine if still alive.
   grow() {
     // Growing r with some random noise.
@@ -361,7 +356,7 @@ class Tree {
   }
 
   // Get distance between this tree and another tree.
-  distance(tree, toEdge = false) {
+  getDistance(tree, toEdge = false) {
     let distance = Math.sqrt(Math.pow(this.x - tree.x, 2)
                              + Math.pow(this.y - tree.y, 2));
     if (toEdge) {  // get distance to edge of circle
@@ -370,10 +365,15 @@ class Tree {
       return distance;
     }
   }
+
+  // Return the area of the tree.
+  getArea() {
+    return Math.PI * Math.pow(this.r, 2);
+  }
 }
 
 
-
+// Various callback functions when user gives some input through a slider or click.
 // Clear cut after user click.
 let doOnClick = function(event) {
   let x = event.clientX;
@@ -390,18 +390,17 @@ speciesSlider.addEventListener('input', doOnSpeciesSlide);
 
 // Adjust the setInterval update after user adjusts number of species.
 let doOnUpdateSlide = function(event) {
-  console.log('here');
   if (intervalID !== null) {
     clearInterval(intervalID);
   }
-  let interval = Math.pow(2, 6 - updateSlider.value);
+  let interval = Math.pow(2, 7 - updateSlider.value);
   // setInterval has a certain browser-dependent floor, possibly around 5ms
   intervalID = setInterval(updateForest, interval);
 }
 updateSlider.addEventListener('input', doOnUpdateSlide);
 
 
-// This gets animation initially started.
+// Get animation initially started.
 resetForest();
 let intervalID = null;
 doOnUpdateSlide();
