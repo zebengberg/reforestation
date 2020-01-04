@@ -1,3 +1,5 @@
+// jshint esversion: 6
+
 // Getting, setting, repositioning, and labeling HTML objects.
 
 let forestCanvas = document.getElementById('forestCanvas');
@@ -6,7 +8,7 @@ forestCanvas.height = window.innerHeight - 210;  // saving room at bottom
 let c = forestCanvas.getContext('2d');
 
 let userCanvas = document.getElementById('userCanvas');
-userCanvas.width = .6 * window.innerWidth;
+userCanvas.width = 0.6 * window.innerWidth;
 userCanvas.height = 190;
 userCanvas.style.position = 'absolute';
 userCanvas.style.left = '5px';
@@ -86,9 +88,10 @@ updateSlider.value = 3;
 
 
 // Set global variables that track of all trees and forest-wide parameters.
-let nTrees, treeArray, maxRadius, boxDict, treeSpecies, treeGrowths, treeColors, stats;
+let nTrees, treeArray, maxRadius, boxDict,
+    treeSpecies, treeGrowths, treeColors, stats;
 function resetForest() {
-    // Fill the canvas with white so we can paint over dead trees with background color.
+  // Fill the canvas with white; useful for clearing dead trees.
   c.fillStyle = 'rgba(255, 255, 255, 255)';
   c.fillRect(0, 0, forestCanvas.width, forestCanvas.height);
   nTrees = speciesSlider.value;
@@ -100,7 +103,7 @@ function resetForest() {
   treeColors = [];
   for (let i = 0; i < nTrees; i++) {
     treeSpecies.push(i);
-    let rate = (2 * i + 1) / (2 * nTrees)
+    let rate = (2 * i + 1) / (2 * nTrees);
     // brighter colors (reds, oranges) should grow faster
     let hsl = 'hsl(' + (280 * (1 - rate)).toString() + ', 100%, 50%)';
     treeGrowths.push(rate);
@@ -108,7 +111,7 @@ function resetForest() {
   }
   // Keeping track of forest summary statistics over time.
   // Each speciesDict will hold the total area of trees of a given species.
-  stats = []
+  stats = [];
   for (let i = 0; i < userCanvas.width; i++) {
     let speciesDict = {};
     for (let species of treeSpecies) {
@@ -136,7 +139,7 @@ function setBoxDict() {
                 [u, v + 1],
                 [u + 1, v - 1],
                 [u + 1, v],
-                [u + 1, v + 1]]
+                [u + 1, v + 1]];
     for (let key of keys) {
       if (key in boxDict) {
         boxDict[key].push(tree);  // key will be converted to string
@@ -170,16 +173,15 @@ function birthTree(n = 1) {
     let y = Math.random() * forestCanvas.height;
     // Determining if there is a tree at (x, y)
     let pixelRGBA = c.getImageData(x, y, 1, 1);
-    let colorValue = pixelRGBA.data[0] + pixelRGBA.data[1]
-                     + pixelRGBA.data[2];
+    let colorValue = pixelRGBA.data[0] + pixelRGBA.data[1] + pixelRGBA.data[2];
     if (colorValue > 750) {  // no currently existing tree at (x, y)
       // looking at neighboring trees
       let u = Math.floor(x / (2 * maxRadius));
       let v = Math.floor(y / (2 * maxRadius));
 
       let species = 0;  // will modify this in conditionals below
-      if ((seedSlider.value > -1) && ([u, v] in boxDict)) { // seedling has neighbors
-        // Building speciesDict to count species of neighboring trees
+      if ((seedSlider.value > -1) && ([u, v] in boxDict)) { // has neighbors
+        // Building speciesDict to count species of neighboring trees.
         let speciesDict = {};
         let totalNeighborArea = 0;
         for (let species of treeSpecies) {
@@ -192,14 +194,14 @@ function birthTree(n = 1) {
         }
         for (let tree of boxDict[[u, v]]) {
           // Weight according to neighbor area.
-          // Could instead use some Lp weighting: weight by sum of powers of areas.
+          // Could instead use some Lp weighting isntead.
           speciesDict[tree.species] += tree.getArea();
           totalNeighborArea += tree.getArea();
         }
         for (let species in speciesDict) {
           speciesDict[species] /= totalNeighborArea;
         }
-        // Need to get random species choice with weights from speciesDict
+        // Need to get random species choice with weights from speciesDict.
         let random = Math.random();
         let weight = speciesDict[species];  // getting first probability
         while (random > weight) {
@@ -267,12 +269,14 @@ function graphStats() {
     for (let speciesDict of stats) {
       if (t == 0) {
         c2.beginPath();  // starting path
-        // Arbitrary constant 300 * nTrees used to scale the y-values appropriately.
+        // Arbitrary constant 300 * nTrees to scale the y-values appropriately.
         // Using max with 1 to prevent graph from going off the canvas.
-        c2.moveTo(t, Math.max(userCanvas.height - 300 * nTrees * speciesDict[species], 1));
+        c2.moveTo(t, Math.max(userCanvas.height -
+                              300 * nTrees * speciesDict[species], 1));
         t++;
       } else {
-        c2.lineTo(t, Math.max(userCanvas.height - 300 * nTrees * speciesDict[species], 1));
+        c2.lineTo(t, Math.max(userCanvas.height -
+                              300 * nTrees * speciesDict[species], 1));
         t++;
       }
     }
@@ -317,18 +321,18 @@ class Tree {
     // Growing r with some random noise.
     // Don't grow beyond edge of canvas. Don't grow into neighbors.
 
-    let growBool = this.r < maxRadius
-                   && this.r < this.closestNeighborDist
-                   && this.x - this.r >= 0
-                   && this.y - this.r >= 0
-                   && this.x + this.r <= forestCanvas.width
-                   && this.y + this.r <= forestCanvas.height;
+    let growBool = this.r < maxRadius &&
+                   this.r < this.closestNeighborDist &&
+                   this.x - this.r >= 0 &&
+                   this.y - this.r >= 0 &&
+                   this.x + this.r <= forestCanvas.width &&
+                   this.y + this.r <= forestCanvas.height;
     if (growBool) {
       this.r += this.growthRate * Math.random() / 5;
     }
     // Can scale the growthRate to affect dynamics.
-    let deathIncrease = (Math.pow(3, deathSlider.value) - 1)  // exponential
-                        * this.growthRate / Math.pow(10, 6);
+    let deathIncrease = (Math.pow(3, deathSlider.value) - 1) * // exponential
+                        this.growthRate / Math.pow(10, 6);
     this.deathProb += deathIncrease;
     if (Math.random() < this.deathProb) {  // tree dies
       this.isAlive = false;
@@ -341,7 +345,7 @@ class Tree {
     if (this.isAlive) {
       c.fillStyle = this.color;
     } else {
-      this.r += 2  // pad the blank circle so no leftovers after filled white
+      this.r += 2;  // pad the blank circle so no leftovers after filled white
       c.fillStyle = 'rgba(255, 255, 255, 255)';
     }
     c.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
@@ -356,8 +360,8 @@ class Tree {
 
   // Get distance between this tree and another tree.
   getDistance(tree, toEdge = false) {
-    let distance = Math.sqrt(Math.pow(this.x - tree.x, 2)
-                             + Math.pow(this.y - tree.y, 2));
+    let distance = Math.sqrt(Math.pow(this.x - tree.x, 2) +
+                             Math.pow(this.y - tree.y, 2));
     if (toEdge) {  // get distance to edge of circle
       return distance - tree.r;  // subtract off the radius of second tree
     } else {  // get distance to center of tree
@@ -372,19 +376,19 @@ class Tree {
 }
 
 
-// Various callback functions when user gives some input through a slider or click.
+// Various callback functions when user gives input through a slider or click.
 // Clear cut after user click.
 let doOnClick = function(event) {
   let x = event.clientX;
   let y = event.clientY;
   clearCut(x, y);
-}
+};
 forestCanvas.addEventListener('click', doOnClick);
 
 // Reset the forest after user adjusts number of species.
 let doOnSpeciesSlide = function(event) {
   resetForest();
-}
+};
 speciesSlider.addEventListener('input', doOnSpeciesSlide);
 
 // Adjust the setInterval update after user adjusts number of species.
@@ -395,7 +399,7 @@ let doOnUpdateSlide = function(event) {
   let interval = Math.pow(2, 7 - updateSlider.value);
   // setInterval has a certain browser-dependent floor, possibly around 5ms
   intervalID = setInterval(updateForest, interval);
-}
+};
 updateSlider.addEventListener('input', doOnUpdateSlide);
 
 
