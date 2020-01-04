@@ -59,8 +59,7 @@ let seedLabel = document.getElementById('seedLabel');
 seedLabel.style.position = 'absolute';
 seedLabel.style.left = userCanvas.width + 150 + 'px';
 seedLabel.style.top = forestCanvas.height + 130 + 'px';
-seedLabel.innerText = 'SEEDLING BIRTH: To what extent should a '
-                      + 'new seed depend on its parent neighbors?';
+seedLabel.innerText = 'SEEDLING BIRTH: seedlings birthed by neighbors';
 
 let seedSlider = document.getElementById('seedSlider');
 seedSlider.style.position = 'absolute';
