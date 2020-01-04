@@ -2,9 +2,7 @@ let forestCanvas = document.getElementById('forestCanvas');
 forestCanvas.width = window.innerWidth;
 forestCanvas.height = window.innerHeight - 210;  // saving room at bottom
 let c = forestCanvas.getContext('2d');
-// Fill the background white so we can paint over dead trees with background color.
-c.fillStyle = 'rgba(255, 255, 255, 255)';
-c.fillRect(0, 0, forestCanvas.width, forestCanvas.height);
+
 
 let userCanvas = document.getElementById('userCanvas');
 userCanvas.width = .6 * window.innerWidth;
@@ -31,13 +29,13 @@ birthSlider.value = 3;
 let deathLabel = document.getElementById('deathLabel');
 deathLabel.style.position = 'absolute';
 deathLabel.style.left = userCanvas.width + 150 + 'px';
-deathLabel.style.top = forestCanvas.height + 60 + 'px';
-deathLabel.innerText = 'Death rate: Will mostly effect newborns.';
+deathLabel.style.top = forestCanvas.height + 50 + 'px';
+deathLabel.innerText = 'Death rate: will mostly effect newborns.';
 
 let deathSlider = document.getElementById('deathSlider');
 deathSlider.style.position = 'absolute';
 deathSlider.style.left = userCanvas.width + 10 + 'px';
-deathSlider.style.top = forestCanvas.height + 60 + 'px';
+deathSlider.style.top = forestCanvas.height + 50 + 'px';
 deathSlider.min = 0;
 deathSlider.max = 6;
 deathSlider.value = 3;
@@ -46,61 +44,80 @@ deathSlider.value = 3;
 let speciesLabel = document.getElementById('speciesLabel');
 speciesLabel.style.position = 'absolute';
 speciesLabel.style.left = userCanvas.width + 150 + 'px';
-speciesLabel.style.top = forestCanvas.height + 110 + 'px';
-speciesLabel.innerText = 'Number of tree species: this will reset forest';
+speciesLabel.style.top = forestCanvas.height + 90 + 'px';
+speciesLabel.innerText = 'Number of tree species: moving this will reset forest.';
 
 let speciesSlider = document.getElementById('speciesSlider');
 speciesSlider.style.position = 'absolute';
 speciesSlider.style.left = userCanvas.width + 10 + 'px';
-speciesSlider.style.top = forestCanvas.height + 110 + 'px';
+speciesSlider.style.top = forestCanvas.height + 90 + 'px';
+speciesSlider.min = 1;
+speciesSlider.max = 6;
+speciesSlider.value = 2;
 
 let seedLabel = document.getElementById('seedLabel');
 seedLabel.style.position = 'absolute';
 seedLabel.style.left = userCanvas.width + 150 + 'px';
-seedLabel.style.top = forestCanvas.height + 160 + 'px';
-seedLabel.innerText = 'Uniformity of Seedlings: To what extent should a '
+seedLabel.style.top = forestCanvas.height + 130 + 'px';
+seedLabel.innerText = 'Uniformity of Seedlings: to what extent should a '
                       + 'new seed depend on its neighbors?';
 
 let seedSlider = document.getElementById('seedSlider');
 seedSlider.style.position = 'absolute';
 seedSlider.style.left = userCanvas.width + 10 + 'px';
-seedSlider.style.top = forestCanvas.height + 160 + 'px';
-seedSlider.min = 0;
-seedSlider.max = 1;
-seedSlider.step = 0.25;
-seedSlider.value = 0.5;
+seedSlider.style.top = forestCanvas.height + 130 + 'px';
+seedSlider.min = -1;
+seedSlider.max = 2;
+seedSlider.value = 1;
+
+let updateLabel = document.getElementById('updateLabel');
+updateLabel.style.position = 'absolute';
+updateLabel.style.left = userCanvas.width + 150 + 'px';
+updateLabel.style.top = forestCanvas.height + 170 + 'px';
+updateLabel.innerText = 'Update rate.';
+
+let updateSlider = document.getElementById('updateSlider');
+updateSlider.style.position = 'absolute';
+updateSlider.style.left = userCanvas.width + 10 + 'px';
+updateSlider.style.top = forestCanvas.height + 170 + 'px';
+updateSlider.min = 0;
+updateSlider.max = 6;
+updateSlider.value = 3;
+
+
 
 
 // Set global variables that track of all trees and forest-wide parameters.
-let nTrees, treeSpecies, treeGrowths, treeColors, treeArray, maxRadius;
+let nTrees, treeArray, maxRadius, boxDict, treeSpecies, treeGrowths, treeColors, stats;
 function resetForest() {
-  nTrees = 5;
+    // Fill the canvas with white so we can paint over dead trees with background color.
+  c.fillStyle = 'rgba(255, 255, 255, 255)';
+  c.fillRect(0, 0, forestCanvas.width, forestCanvas.height);
+  nTrees = speciesSlider.value;
+  treeArray = [];
+  maxRadius = 50;
+  boxDict = {};  // boxDict[u, v] will hold trees near (u, v) box-coord
   treeSpecies = [];
   treeGrowths = [];
   treeColors = [];
   for (let i = 0; i < nTrees; i++) {
     treeSpecies.push(i);
-    let rate = (2 * i + 1) / (2 * nTrees)  // try to uniformly spread the growth rates
+    let rate = (2 * i + 1) / (2 * nTrees)
+    // brighter colors (reds, oranges) should grow faster
+    let hsl = 'hsl(' + (280 * (1 - rate)).toString() + ', 100%, 50%)';
     treeGrowths.push(rate);
-    treeColors.push('rgba(255 * rate, 255 * (1 - rate), 255, 255)');
+    treeColors.push(hsl);
   }
-  treeArray = [];
-  maxRadius = 50;
-
-}
-resetForest();
-
-//let treeColors = ['Turquoise', 'SeaGreen', 'Gold', 'DarkOrange', 'DeepPink'];
-let boxDict = {}  // boxDict[u, v] will hold trees near (u, v) box-coord
-// Keeping track of forest summary statistics over time.
-// Each speciesDict will hold the total area of trees of a given species.
-let stats = []
-for (let i = 0; i < userCanvas.width; i++) {
-  let speciesDict = {};
-  for (let species of treeSpecies) {
-    speciesDict[species] = 0;
+  // Keeping track of forest summary statistics over time.
+  // Each speciesDict will hold the total area of trees of a given species.
+  stats = []
+  for (let i = 0; i < userCanvas.width; i++) {
+    let speciesDict = {};
+    for (let species of treeSpecies) {
+      speciesDict[species] = 0;
+    }
+    stats.push(speciesDict);
   }
-  stats.push(speciesDict);
 }
 
 // Build the boxes needed to calculated all nearest neighbors.
@@ -163,7 +180,7 @@ function birthTree(n = 1) {
       let v = Math.floor(y / (2 * maxRadius));
 
       let species = 0;  // will modify this in conditionals below
-      if ((seedSlider.value > 0) && ([u, v] in boxDict)) { // seedling has neighbors
+      if ((seedSlider.value > -1) && ([u, v] in boxDict)) { // seedling has neighbors
         // Building speciesDict to count species of neighboring trees
         let speciesDict = {};
         for (let species of treeSpecies) {
@@ -173,6 +190,9 @@ function birthTree(n = 1) {
         let totalNeighborArea = 0;
         for (let tree of boxDict[[u, v]]) {
           // Using a sort of Lp norm to weight the neighbors.
+          // With seedSlider.value = 0, weighting just counts neighbors.
+          // With seedSlider.value = 1, weighting by neighbor's area.
+          // With seedSlider.value = 2, weighting by area ^ 2.
           let weightedArea = Math.pow(tree.getArea(), seedSlider.value);
           speciesDict[tree.species] += weightedArea;
           totalNeighborArea += weightedArea;
@@ -248,22 +268,32 @@ function graphStats() {
     for (let speciesDict of stats) {
       if (t == 0) {
         c2.beginPath();  // starting path
-        // Arbitrary constant 1500 used to scale the y-values appropriately.
-        // Using max with 0 to prevent graph from going off the canvas.
-        c2.moveTo(t, Math.max(userCanvas.height - 1500 * speciesDict[species], 0));
+        // Arbitrary constant 300 * nTrees used to scale the y-values appropriately.
+        // Using max with 1 to prevent graph from going off the canvas.
+        c2.moveTo(t, Math.max(userCanvas.height - 300 * nTrees * speciesDict[species], 1));
         t++;
       } else {
-        c2.lineTo(t, Math.max(userCanvas.height - 1500 * speciesDict[species], 0));
+        c2.lineTo(t, Math.max(userCanvas.height - 300 * nTrees * speciesDict[species], 1));
         t++;
       }
     }
-    c2.lineWidth = 2;
+    c2.lineWidth = 3;
     c2.strokeStyle = treeColors[species];
     c2.stroke();
   }
 }
 
-
+// Animate the forest. This is the "main()" function for the forest.
+let updateForest = function() {
+  // Increasing the number of births will result in smaller trees. The number
+  // of births and the constant in front of the deathProb should be inverse.
+  birthTree(Math.pow(2, birthSlider.value) - 1);  // exponential scaling
+  setBoxDict();
+  setClosestNeighborDist();
+  growForest();
+  updateStats();
+  graphStats();
+};
 
 
 // Keeps track of individual trees.
@@ -352,17 +382,26 @@ let doOnClick = function(event) {
 }
 forestCanvas.addEventListener('click', doOnClick);
 
-// Animate the forest.
-let update = function() {
-  // Increasing the number of births will result in smaller trees. The number
-  // of births and the constant in front of the deathProb should be inverse.
-  birthTree(Math.pow(2, birthSlider.value) - 1);  // exponential scaling
-  setBoxDict();
-  setClosestNeighborDist();
-  growForest();
-  updateStats();
-  graphStats();
-};
+// Reset the forest after user adjusts number of species.
+let doOnSpeciesSlide = function(event) {
+  resetForest();
+}
+speciesSlider.addEventListener('input', doOnSpeciesSlide);
 
-// Applying function update after every n milliseconds.
-setInterval(update, 100);
+// Adjust the setInterval update after user adjusts number of species.
+let doOnUpdateSlide = function(event) {
+  console.log('here');
+  if (intervalID !== null) {
+    clearInterval(intervalID);
+  }
+  let interval = Math.pow(2, 6 - updateSlider.value);
+  // setInterval has a certain browser-dependent floor, possibly around 5ms
+  intervalID = setInterval(updateForest, interval);
+}
+updateSlider.addEventListener('input', doOnUpdateSlide);
+
+
+// This gets animation initially started.
+resetForest();
+let intervalID = null;
+doOnUpdateSlide();
