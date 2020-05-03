@@ -20,6 +20,8 @@ export default class Forest{
     // Properties taken from HTML sliders.
     this.birthRateSlider = args.birthRateSlider;
     this.deathRateSlider = args.deathRateSlider;
+    const updateDeathRate = tree => tree.deathRate = this.deathRate;
+    this.deathRateSlider.onchange = () => this.treeArray.forEach(updateDeathRate);
     this.parentCheck = args.parentCheck;
     this.numberSpecies = args.numberSpecies;
 
@@ -35,9 +37,16 @@ export default class Forest{
 
   // Get the color of a species.
   getColor(species) {
-    const rate = this.getGrowthRate(species);
-    // brighter colors (reds, oranges) grow faster
-    return 'hsl(' + (280 * (1 - rate)).toString() + ', 100%, 50%)';
+    const colors = [
+      ['DarkOrange'],
+      ['Turquoise', 'DarkOrange'],
+      ['Turquoise', 'Gold', 'DarkOrange'],
+      ['BlueViolet', 'Turquoise', 'Gold', 'DarkOrange'],
+      ['BlueViolet', 'Turquoise', 'Green', 'Gold', 'DarkOrange'],
+      ['BlueViolet', 'Turquoise', 'Green', 'Gold', 'DarkOrange', 'Firebrick']
+    ];
+    return colors[this.numberSpecies - 1][species];
+    //return 'hsl(' + (280 * (1 - rate)).toString() + ', 100%, 50%)';
   }
 
   // Get growth rate of a species.
@@ -80,7 +89,7 @@ export default class Forest{
       if (colorSum > 750) {  // no currently existing tree at (x, y)
         const species = this.getTreeParent(u, v);
         const growthRate = this.getGrowthRate(species);
-        const deathRate = this.deathRateSlider.value;
+        const deathRate = this.deathRate;
         const color = this.getColor(species);
         const canvas = this.canvas;
         const maxRadius = this.maxTreeRadius;
@@ -91,6 +100,10 @@ export default class Forest{
         tree.draw();
       }
     }
+  }
+
+  get deathRate() {
+    return Math.pow(3, this.deathRateSlider.value) - 1;
   }
 
   // Get all nearest neighbors by exploiting that trees have a maxRadius.
@@ -112,19 +125,21 @@ export default class Forest{
     // Removing dead trees
     this.treeArray = this.treeArray.filter(tree => tree.isAlive);
     // Growing and drawing the living trees
-    this.treeArray.forEach(tree => tree.grow());
-    this.treeArray.forEach(tree => tree.draw());
+    this.treeArray.forEach(tree => {
+      tree.grow();
+      tree.draw();
+    });
   }
 
   // Determine a new tree's species based on neighboring tree's species.
   getTreeParent(u, v) {
-    if (!this.parentCheck.value) {
+    if (!this.parentCheck.checked) {
       // Equal weighting of all possible species.
       return Math.floor(Math.random() * this.numberSpecies);
     }
     // Weighting according to area.
     // Giving all trees a non-zero probability by filling with 1.
-    let weights = Array(this.numberSpecies).fill(1);
+    let weights = Array(this.numberSpecies).fill(10);
     const reducer = (w, tree) => {
       w[tree.species] += tree.area;
       return w;
@@ -195,7 +210,7 @@ export default class Forest{
   // Update all aspects of the forest.
   update() {
     this.buildTreeGrid();
-    this.birthTree();
+    this.birthTree(Math.pow(2, this.birthRateSlider.value) - 1);
     this.setClosestNeighborDist();
     this.growTreesInForest();
     this.updateStats();

@@ -24,7 +24,7 @@ let forest = new Forest(forestArgs);
 numberSpeciesSlider.onchange = () => {
   forest.resetContext();
   numberSpecies = Number(numberSpeciesSlider.value);
-  forestArgs.numberSpecies = numberSpeciesSlider;
+  forestArgs.numberSpecies = numberSpecies;
   forest = new Forest(forestArgs);
 };
 
