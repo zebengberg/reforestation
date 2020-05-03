@@ -18,9 +18,9 @@ export default class Forest{
     this.statsCanvas = args.statsCanvas;
 
     // Properties taken from HTML sliders.
-    this.birthRate = args.birthRate;
-    this.deathRate = args.deathRate;
-    this.parentSelection = args.parentSelection;
+    this.birthRateSlider = args.birthRateSlider;
+    this.deathRateSlider = args.deathRateSlider;
+    this.parentCheck = args.parentCheck;
     this.numberSpecies = args.numberSpecies;
 
     // Some constant
@@ -80,11 +80,12 @@ export default class Forest{
       if (colorSum > 750) {  // no currently existing tree at (x, y)
         const species = this.getTreeParent(u, v);
         const growthRate = this.getGrowthRate(species);
-        const deathRate = this.deathRate;
+        const deathRate = this.deathRateSlider.value;
         const color = this.getColor(species);
         const canvas = this.canvas;
         const maxRadius = this.maxTreeRadius;
-        const treeArgs = {x, y, u, v, species, growthRate, deathRate, color, canvas, maxRadius};
+        const treeArgs = {x, y, u, v, species, growthRate, deathRate, color,
+          canvas, maxRadius};
         const tree = new Tree(treeArgs);
         this.treeArray.push(tree);
         tree.draw();
@@ -117,14 +118,17 @@ export default class Forest{
 
   // Determine a new tree's species based on neighboring tree's species.
   getTreeParent(u, v) {
-    if (this.parentSelection === 0) {
+    if (!this.parentCheck.value) {
       // Equal weighting of all possible species.
       return Math.floor(Math.random() * this.numberSpecies);
     }
     // Weighting according to area.
     // Giving all trees a non-zero probability by filling with 1.
-    let weights = new Array(this.numberSpecies).fill(1);
-    const reducer = (w, tree) => w[tree.species] += tree.area;
+    let weights = Array(this.numberSpecies).fill(1);
+    const reducer = (w, tree) => {
+      w[tree.species] += tree.area;
+      return w;
+    };
     weights = this.treeGrid[u][v].reduce(reducer, weights);
 
     const cumulativeSum = (sum => value => sum += value)(0);
@@ -154,7 +158,6 @@ export default class Forest{
   // Update statistics.
   updateStats() {
     this.stats.shift();  // remove first element from stats
-    // TODO: need new keyword?
     let areas = Array(this.numberSpecies).fill(0);
     const reducer = (a, tree) => {
       a[tree.species] += tree.area;
@@ -191,8 +194,8 @@ export default class Forest{
 
   // Update all aspects of the forest.
   update() {
-    this.birthTree();
     this.buildTreeGrid();
+    this.birthTree();
     this.setClosestNeighborDist();
     this.growTreesInForest();
     this.updateStats();

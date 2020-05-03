@@ -1,37 +1,44 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html>
   <head>
-    <style type="text/css">
+    <style>
       canvas {border: 2px solid black}
-      body {margin: 0}
+      body {
+        margin: 0;
+        border: 0;
+        overflow: hidden;
+        display: block;
+      }
+      div {margin: 10px}
     </style>
   </head>
 </html>
 
+
 <body>
   <canvas id='forestCanvas'></canvas>
-  <canvas id='userCanvas'></canvas>
+  <canvas id='statsCanvas'></canvas>
 
-  <div>
-    <input type='range' id='birthSlider'>
-    <label id='birthLabel'></label>
-  </div>
-  <div>
-    <input type='range' id='deathSlider'>
-    <label id='deathLabel'></label>
-  </div>
-  <div>
-    <input type='range' id='speciesSlider'>
-    <label id='speciesLabel'></label>
-  </div>
-  <div>
-    <input type='range' id='seedSlider'>
-    <label id='seedLabel'></label>
-  </div>
-  <div>
-    <input type='range' id='updateSlider'>
-    <label id='updateLabel'></label>
-  </div>
+  <div style='display: inline-block'>
+    <div>
+      <input type='range' id='birthRateSlider' min='0' max='6' value='3'>
+      <label for='birthRateSlider'>Birth Rate</label>
+    </div>
 
-  <script src='reforestation.js'></script>
+    <div>
+      <input type='range' id='deathRateSlider' min='0' max='6' value='3'>
+      <label for='deathRateSlider'>Death Rate</label>
+    </div>
+
+    <div>
+      <input type='range' id='numberSpeciesSlider' min='1' max='6' value='3'>
+      <label for='numberSpeciesSlider'>Number of Species (resets forest)</label>
+    </div>
+
+    <div>
+      <input type='checkbox' id='parentCheck' checked>
+      <label for='parentCheck'>New tree species determined by neighbors?</label>
+    </div>
+  </div>
 </body>
+
+<script type='module' src='reforestation.js'></script>
