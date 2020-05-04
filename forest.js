@@ -22,9 +22,9 @@ export default class Forest {
     getColor(species) {
         const colors = [
             ['DarkOrange'],
-            ['Turquoise', 'DarkOrange'],
-            ['Turquoise', 'Gold', 'DarkOrange'],
-            ['BlueViolet', 'Turquoise', 'Gold', 'DarkOrange'],
+            ['DarkTurquoise', 'DarkOrange'],
+            ['DarkTurquoise', 'PaleGreen', 'DarkOrange'],
+            ['BlueViolet', 'Turquoise', 'PaleGreen', 'DarkOrange'],
             ['BlueViolet', 'Turquoise', 'Green', 'Gold', 'DarkOrange'],
             ['BlueViolet', 'Turquoise', 'Green', 'Gold', 'DarkOrange', 'Firebrick']
         ];
@@ -80,11 +80,11 @@ export default class Forest {
     }
     // Get all nearest neighbors by exploiting that trees have a maxRadius.
     setClosestNeighborDistance() {
-        // For each tree, compare with all other trees in treeGrid.
-        this.treeArray.forEach((tree) => {
+        // For each tree still growing, compare with all other trees in treeGrid.
+        this.treeArray.filter(tree => tree.isGrowing).forEach(tree => {
             const distance = (other) => {
                 const dist = tree.getDistance(other.x, other.y, other.r);
-                // Want ot avoid comparing the tree to itself.
+                // Want to avoid comparing the tree to itself.
                 return dist > 0 ? dist : Infinity;
             };
             const distances = this.treeGrid[tree.u][tree.v].map(distance);
@@ -95,9 +95,11 @@ export default class Forest {
     growTreesInForest() {
         // Removing dead trees
         this.treeArray = this.treeArray.filter(tree => tree.isAlive);
-        // Growing and drawing the living trees
+        // Growing and drawing the trees still growing
+        this.treeArray.filter(tree => tree.isGrowing).forEach(tree => tree.grow());
+        // Updating each tree's isAlive property then drawing the trees.
         this.treeArray.forEach(tree => {
-            tree.grow();
+            tree.alive();
             tree.draw();
         });
     }
@@ -156,7 +158,7 @@ export default class Forest {
             // Arbitrary constant 300 * nTrees to scale the y-values appropriately.
             // Using max with 1 to prevent graph from going off the canvas.
             const yValue = (t) => Math.max(this.statsCanvas.height -
-                300 * this.numberSpecies * this.stats[t][species]);
+                200 * this.numberSpecies * this.stats[t][species], 1);
             c.beginPath();
             let t = 0;
             c.moveTo(t, yValue(t));

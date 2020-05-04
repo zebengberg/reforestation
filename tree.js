@@ -16,6 +16,7 @@ export default class Tree {
         this.r = 1;
         this.deathProb = 0;
         this.closestNeighborDistance = Infinity;
+        this.isGrowing = true;
         this.isAlive = true;
     }
     // Check if tree is entirely contained in canvas.
@@ -23,14 +24,20 @@ export default class Tree {
         return this.x - this.r >= 0 && this.x + this.r <= this.canvas.width &&
             this.y - this.r >= 0 && this.y + this.r <= this.canvas.height;
     }
-    // Grow the tree and determine if it is still alive.
+    // Determine if the tree is growing, and grow it.
     grow() {
         // Don't grow beyond edge of canvas. Don't grow into neighbors.
         if (this.r < this.maxRadius &&
             this.r < this.closestNeighborDistance &&
             this.isContainedInCanvas()) {
-            this.r += this.growthRate * Math.random() / 5;
+            this.r += Math.sqrt(this.growthRate * Math.random() / 100);
         }
+        else {
+            this.isGrowing = false;
+        }
+    }
+    // Determine if the tree is alive.
+    alive() {
         // A faster growing tree has a higher probability of dying.
         this.deathProb += this.deathRate * this.growthRate / Math.pow(10, 6);
         this.isAlive = Math.random() > this.deathProb;
