@@ -1,12 +1,13 @@
 import Forest from './forest.js';
 
 // Sizing the two canvas objects.
+const userInput = <HTMLDivElement> document.getElementById('userInput');
 const forestCanvas = <HTMLCanvasElement> document.getElementById('forestCanvas');
-forestCanvas.width = window.innerWidth - 3;
-forestCanvas.height = 0.75 * window.innerHeight;
+forestCanvas.width = window.innerWidth - 5;
+forestCanvas.height = 0.75 * (window.innerHeight - userInput.offsetHeight);
 const statsCanvas = <HTMLCanvasElement> document.getElementById('statsCanvas');
-statsCanvas.width = 0.6 * window.innerWidth;
-statsCanvas.height = 0.25 * window.innerHeight - 20;
+statsCanvas.width = window.innerWidth - 5;
+statsCanvas.height = 0.25 * (window.innerHeight - userInput.offsetHeight) - 20;
 
 // User input.
 const birthRateSlider = <HTMLInputElement> document.getElementById('birthRateSlider');
@@ -15,6 +16,7 @@ const parentCheckbox = <HTMLInputElement> document.getElementById('parentCheckbo
 const numberSpeciesSlider = <HTMLInputElement> document.getElementById('numberSpeciesSlider');
 
 let numberSpecies = +numberSpeciesSlider.value;
+// arbitrary initial values; we call updateForestProperties below.
 const birthRate = 1;
 const deathRate = 1;
 const parentCheck = true;
@@ -23,11 +25,12 @@ const parentCheck = true;
 // Creating forest object.
 const forestArgs = {forestCanvas, statsCanvas, birthRate, deathRate, parentCheck, numberSpecies};
 let forest = new Forest(forestArgs);
+updateForestProperties();
 
 // Callback functions.
 function updateForestProperties() {
-  forest.birthRate = Math.pow(3, +birthRateSlider.value) - 1;
-  forest.deathRate = Math.pow(3, +deathRateSlider.value) - 1;
+  forest.birthRate = Math.pow(3, +birthRateSlider.value) - 2;
+  forest.deathRate = Math.pow(3, +deathRateSlider.value) - 2;
   forest.parentCheck = parentCheckbox.checked;
   forest.treeArray.forEach(tree => tree.deathRate = forest.deathRate);
 }

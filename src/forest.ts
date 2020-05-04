@@ -43,9 +43,9 @@ export default class Forest{
   getColor(species: number) {
     const colors = [
       ['DarkOrange'],
-      ['Turquoise', 'DarkOrange'],
-      ['Turquoise', 'Gold', 'DarkOrange'],
-      ['BlueViolet', 'Turquoise', 'Gold', 'DarkOrange'],
+      ['DarkTurquoise', 'DarkOrange'],
+      ['DarkTurquoise', 'PaleGreen', 'DarkOrange'],
+      ['BlueViolet', 'Turquoise', 'PaleGreen', 'DarkOrange'],
       ['BlueViolet', 'Turquoise', 'Green', 'Gold', 'DarkOrange'],
       ['BlueViolet', 'Turquoise', 'Green', 'Gold', 'DarkOrange', 'Firebrick']
     ];
@@ -195,7 +195,7 @@ export default class Forest{
       // Arbitrary constant 300 * nTrees to scale the y-values appropriately.
       // Using max with 1 to prevent graph from going off the canvas.
       const yValue = (t: number) => Math.max(this.statsCanvas.height -
-        300 * this.numberSpecies * this.stats[t][species]);
+        200 * this.numberSpecies * this.stats[t][species], 1);
 
       c.beginPath();
       let t = 0;
