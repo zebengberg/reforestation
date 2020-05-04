@@ -108,8 +108,8 @@ export default class Forest{
 
   // Get all nearest neighbors by exploiting that trees have a maxRadius.
   setClosestNeighborDistance() {
-    // For each tree, compare with all other trees in treeGrid.
-    this.treeArray.forEach((tree) => {
+    // For each tree still growing, compare with all other trees in treeGrid.
+    this.treeArray.filter(tree => tree.isGrowing).forEach(tree => {
       const distance = (other: Tree) => {
         const dist = tree.getDistance(other.x, other.y, other.r);
         // Want to avoid comparing the tree to itself.
@@ -124,9 +124,11 @@ export default class Forest{
   growTreesInForest() {
     // Removing dead trees
     this.treeArray = this.treeArray.filter(tree => tree.isAlive);
-    // Growing and drawing the living trees
+    // Growing and drawing the trees still growing
+    this.treeArray.filter(tree => tree.isGrowing).forEach(tree => tree.grow());
+    // Updating each tree's isAlive property then drawing the trees.
     this.treeArray.forEach(tree => {
-      tree.grow();
+      tree.alive();
       tree.draw();
     });
   }

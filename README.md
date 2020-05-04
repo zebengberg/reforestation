@@ -48,6 +48,16 @@ This algorithm now has a runtime of **O(n)**. Here the implied constant depends 
 
 In progress. Will allow tree species to evolve their growth parameters over time through natural selection.
 
+## Build
+To run locally, run
+```shell script
+$ tsc
+$ cp src/index.html dist/
+$ cd dist/
+$ python -m http.server
+```
+then point your browser to `localhost:8000`. To push to the gh-pages branch of this repo, run `$ gh-pages -d dist`.
+
 
 ## License
 
