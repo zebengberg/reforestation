@@ -1,42 +1,46 @@
 import Tree from './tree.js';
 
 export default class Forest{
-  constructor(args) {
-    // Forest and stat canvas.
-    this.canvas = args.forestCanvas;
-    this.canvas.onclick = event => {
-      const rect = this.canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      this.clearCut(x, y);
-    };
+  canvas: HTMLCanvasElement;
+  context: CanvasRenderingContext2D;
+  statsCanvas: HTMLCanvasElement;
+  birthRate: number;
+  deathRate: number;
+  parentCheck: boolean;
+  numberSpecies: number;
+  maxTreeRadius: number;
+  treeArray: Tree[];
+  treeGrid: Tree[][][];
+  stats: number[][];
 
-    this.width = this.canvas.width;
-    this.height = this.canvas.height;
+  constructor({forestCanvas, statsCanvas, birthRate, deathRate, parentCheck,
+    numberSpecies}: {forestCanvas: HTMLCanvasElement,
+    statsCanvas: HTMLCanvasElement, birthRate: number, deathRate: number,
+    parentCheck: boolean, numberSpecies: number}) {
+    // Forest and stat canvas.
+    this.canvas = forestCanvas;
     this.context = this.canvas.getContext('2d');
     this.resetContext();
-    this.statsCanvas = args.statsCanvas;
+    this.statsCanvas = statsCanvas;
 
     // Properties taken from HTML sliders.
-    this.birthRateSlider = args.birthRateSlider;
-    this.deathRateSlider = args.deathRateSlider;
-    const updateDeathRate = tree => tree.deathRate = this.deathRate;
-    this.deathRateSlider.onchange = () => this.treeArray.forEach(updateDeathRate);
-    this.parentCheck = args.parentCheck;
-    this.numberSpecies = args.numberSpecies;
+    this.birthRate = birthRate;
+    this.deathRate = deathRate;
+    this.parentCheck = parentCheck;
+    this.numberSpecies = numberSpecies;
 
     // Some constant
     this.maxTreeRadius = 50;
 
     // Containers holding tree data
     this.treeArray = [];  // will be populated when trees are born
-    this.treeGrid = null;  // will be built on each this.update()
-    this.stats = Array(this.statsCanvas.width).fill().map(() =>
+    this.treeGrid = [];  // will be built on each this.update()
+    this.stats = Array(this.statsCanvas.width).fill(null).map(() =>
       Array(this.numberSpecies).fill(0));  // 2d-array holding forest stats
   }
 
   // Get the color of a species.
-  getColor(species) {
+  getColor(species: number) {
     const colors = [
       ['DarkOrange'],
       ['Turquoise', 'DarkOrange'],
@@ -50,15 +54,15 @@ export default class Forest{
   }
 
   // Get growth rate of a species.
-  getGrowthRate(species) {
+  getGrowthRate(species: number) {
     return (2 * species + 1) / (2 * this.numberSpecies);
   }
 
   // Pushing each tree onto (at most) 9 distinct entries in treeGrid.
   buildTreeGrid() {
-    const gridWidth = Math.ceil(this.width / (2 * this.maxTreeRadius));
-    const gridHeight = Math.ceil(this.height / (2 * this.maxTreeRadius));
-    this.treeGrid = Array(gridWidth).fill().map(() => Array(gridHeight).fill([]));
+    const gridWidth = Math.ceil(this.canvas.width / (2 * this.maxTreeRadius));
+    const gridHeight = Math.ceil(this.canvas.height / (2 * this.maxTreeRadius));
+    this.treeGrid = Array(gridWidth).fill(null).map(() => Array(gridHeight).fill([]));
 
     this.treeArray.forEach(tree => {
       // Ensuring grid indices remain in bounds.
@@ -76,10 +80,10 @@ export default class Forest{
   }
 
   // Birth up to n new trees if space is available.
-  birthTree(n = 1) {
+  birthTree(n: number = 1) {
     for (let i = 0; i < n; i++) {
-      const x = Math.random() * this.width;
-      const y = Math.random() * this.height;
+      const x = Math.random() * this.canvas.width;
+      const y = Math.random() * this.canvas.height;
       const u = Math.floor(x / (2 * this.maxTreeRadius));
       const v = Math.floor(y / (2 * this.maxTreeRadius));
 
@@ -102,21 +106,17 @@ export default class Forest{
     }
   }
 
-  get deathRate() {
-    return Math.pow(3, this.deathRateSlider.value) - 1;
-  }
-
   // Get all nearest neighbors by exploiting that trees have a maxRadius.
-  setClosestNeighborDist() {
+  setClosestNeighborDistance() {
     // For each tree, compare with all other trees in treeGrid.
-    this.treeArray.forEach(tree => {
-      const distance = other => {
-        const dist = tree.getDistance(other.coords, other.r);
+    this.treeArray.forEach((tree) => {
+      const distance = (other: Tree) => {
+        const dist = tree.getDistance(other.x, other.y, other.r);
         // Want ot avoid comparing the tree to itself.
         return dist > 0 ? dist : Infinity;
       };
       const distances = this.treeGrid[tree.u][tree.v].map(distance);
-      tree.closestNeighborDist = Math.min(...distances);
+      tree.closestNeighborDistance = Math.min(...distances);
     });
   }
 
@@ -132,21 +132,21 @@ export default class Forest{
   }
 
   // Determine a new tree's species based on neighboring tree's species.
-  getTreeParent(u, v) {
-    if (!this.parentCheck.checked) {
+  getTreeParent(u: number, v: number) {
+    if (!this.parentCheck) {
       // Equal weighting of all possible species.
       return Math.floor(Math.random() * this.numberSpecies);
     }
     // Weighting according to area.
     // Giving all trees a non-zero probability by filling with 1.
     let weights = Array(this.numberSpecies).fill(10);
-    const reducer = (w, tree) => {
+    const reducer = (w: number[], tree: Tree) => {
       w[tree.species] += tree.area;
       return w;
     };
     weights = this.treeGrid[u][v].reduce(reducer, weights);
 
-    const cumulativeSum = (sum => value => sum += value)(0);
+    const cumulativeSum = (sum => (value: number) => sum += value)(0);
     weights = weights.map(cumulativeSum);
 
     const random = Math.random() * weights[weights.length - 1];
@@ -156,14 +156,14 @@ export default class Forest{
   // Reset forest canvas; call before letting this forest be garbage collected.
   resetContext() {
     this.context.fillStyle = 'rgba(255, 255, 255, 255)';
-    this.context.fillRect(0, 0, this.width, this.height);
+    this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
   // Kill all trees in some big circle centered at (x, y)
-  clearCut(x, y) {
-    const radius = Math.min(this.width, this.height) / 4;
+  clearCut(x: number, y: number) {
+    const radius = Math.min(this.canvas.width, this.canvas.height) / 4;
     this.treeArray.forEach(tree => {
-      if (tree.getDistance({x, y}) < radius) {
+      if (tree.getDistance(x, y) < radius) {
         tree.isAlive = false;
         tree.draw();  // removing the dead tree pixels
       }
@@ -174,14 +174,14 @@ export default class Forest{
   updateStats() {
     this.stats.shift();  // remove first element from stats
     let areas = Array(this.numberSpecies).fill(0);
-    const reducer = (a, tree) => {
+    const reducer = (a: number[], tree: Tree) => {
       a[tree.species] += tree.area;
       return a;
     };
     areas = this.treeArray.reduce(reducer, areas);
 
     // Converting to proportions
-    areas = areas.map(area => area / (this.width * this.height));
+    areas = areas.map(area => area / (this.canvas.width * this.canvas.height));
     this.stats.push(areas);
   }
 
@@ -192,7 +192,7 @@ export default class Forest{
     for (let species = 0; species < this.numberSpecies; species++) {
       // Arbitrary constant 300 * nTrees to scale the y-values appropriately.
       // Using max with 1 to prevent graph from going off the canvas.
-      const yValue = t => Math.max(this.statsCanvas.height -
+      const yValue = (t: number) => Math.max(this.statsCanvas.height -
         300 * this.numberSpecies * this.stats[t][species]);
 
       c.beginPath();
@@ -210,10 +210,12 @@ export default class Forest{
   // Update all aspects of the forest.
   update() {
     this.buildTreeGrid();
-    this.birthTree(Math.pow(2, this.birthRateSlider.value) - 1);
-    this.setClosestNeighborDist();
+    this.birthTree(this.birthRate);
+    this.setClosestNeighborDistance();
     this.growTreesInForest();
     this.updateStats();
     this.graphStats();
   }
 }
+
+
