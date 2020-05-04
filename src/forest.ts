@@ -112,7 +112,7 @@ export default class Forest{
     this.treeArray.forEach((tree) => {
       const distance = (other: Tree) => {
         const dist = tree.getDistance(other.x, other.y, other.r);
-        // Want ot avoid comparing the tree to itself.
+        // Want to avoid comparing the tree to itself.
         return dist > 0 ? dist : Infinity;
       };
       const distances = this.treeGrid[tree.u][tree.v].map(distance);
