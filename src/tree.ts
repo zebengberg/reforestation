@@ -1,8 +1,6 @@
 export default class Tree {
   x: number;
   y: number;
-  u: number;
-  v: number;
   r: number;
   species: number;
   color: string;
@@ -16,15 +14,12 @@ export default class Tree {
   canvas: HTMLCanvasElement;
   context: CanvasRenderingContext2D;
 
-  constructor({x, y, u, v, species, color, growthRate, deathRate, maxRadius,
-    canvas}: {x: number, y: number, u: number, v: number, species: number,
-    color: string, growthRate: number, deathRate: number, maxRadius: number,
-    canvas: HTMLCanvasElement}) {
+  constructor({x, y, species, color, growthRate, deathRate, maxRadius, canvas}:
+    {x: number, y: number, species: number, color: string, growthRate: number,
+    deathRate: number, maxRadius: number, canvas: HTMLCanvasElement}) {
     // Getting properties from forest.
     this.x = x;
     this.y = y;
-    this.u = u;
-    this.v = v;
     this.species = species;
     this.color = color;
     this.growthRate = growthRate;
