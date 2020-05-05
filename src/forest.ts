@@ -98,7 +98,8 @@ export default class Forest{
       const pixel = this.context.getImageData(x, y, 1, 1);
       const colorSum = pixel.data[0] + pixel.data[1] + pixel.data[2];
       if (colorSum > 750) {  // no currently existing tree at (x, y)
-        const {species, growthRate} = this.getNewTreeGenes(x, y);
+        const species = this.getNewTreeSpecies(x, y);
+        const growthRate = this.getGrowthRate(species);
         const deathRate = this.deathRate;
         const color = this.getColor(species);
         const canvas = this.canvas;
@@ -140,11 +141,11 @@ export default class Forest{
   }
 
   // Determine a new tree's species based on neighboring tree's species.
-  getNewTreeGenes(x: number, y: number) {
+  getNewTreeSpecies(x: number, y: number) {
     let species;
     if (!this.parentCheck) {
       // Equal weighting of all possible species.
-      species = Math.floor(Math.random() * this.numberSpecies);
+      return Math.floor(Math.random() * this.numberSpecies);
     } else {
       // First filtering to find all trees within disk of radius 2 * maxRadius
       // of (x, y). The choice of radius is arbitrary.
@@ -152,23 +153,35 @@ export default class Forest{
       const [u, v] = this.getGridCoordinates(x, y);
       const disk = this.treeGrid[u][v].filter(tree => tree.getDistance(x, y) < radius);
 
-      // Weighting according to area.
-      // Giving all trees a non-zero probability by filling with 1.
-      let weights = Array(this.numberSpecies).fill(10);
-      const reducer = (w: number[], tree: Tree) => {
-        w[tree.species] += tree.area;
-        return w;
-      };
-      weights = disk.reduce(reducer, weights);
-
-      const cumulativeSum = (sum => (value: number) => sum += value)(0);
-      weights = weights.map(cumulativeSum);
-
-      const random = Math.random() * weights[weights.length - 1];
-      species = weights.findIndex(w => w > random);
+      if (disk.length === 0) {
+        return Math.floor(Math.random() * this.numberSpecies);
+      } else {
+        const parent = this.getRandomTree(disk);
+        return parent.species;
+      }
     }
-    const growthRate = this.getGrowthRate(species);
-    return {species, growthRate};
+  }
+
+  // Get random tree from array of trees. Trees weighted according to their
+  // area. The parameter treeArray should not be empty.
+  getRandomTree(treeArray: Tree[]) {
+    if (treeArray.length === 0) {
+      throw new Error('Tree array is empty!');
+    }
+    // Weighting trees according to area.
+    let weights = Array(this.numberSpecies).fill(0);
+    const reducer = (w: number[], tree: Tree) => {
+      w[tree.species] += tree.area;
+      return w;
+    };
+    weights = treeArray.reduce(reducer, weights);
+
+    const cumulativeSum = (sum => (value: number) => sum += value)(0);
+    weights = weights.map(cumulativeSum);
+
+    const random = Math.random() * weights[weights.length - 1];
+    const index = weights.findIndex(w => w > random);
+    return treeArray[index];
   }
 
   // Reset forest canvas; call before letting this forest be garbage collected.
