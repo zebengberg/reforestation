@@ -32,7 +32,7 @@ export default class Forest{
     this.numberSpecies = numberSpecies;
 
     // Some constant
-    this.maxTreeRadius = 50;
+    this.maxTreeRadius = 30;
 
     // Containers holding tree data
     this.treeArray = [];  // will be populated when trees are born
@@ -98,18 +98,22 @@ export default class Forest{
       const pixel = this.context.getImageData(x, y, 1, 1);
       const colorSum = pixel.data[0] + pixel.data[1] + pixel.data[2];
       if (colorSum > 750) {  // no currently existing tree at (x, y)
-        const species = this.getNewTreeSpecies(x, y);
-        const growthRate = this.getGrowthRate(species);
-        const deathRate = this.deathRate;
-        const color = this.getColor(species);
-        const canvas = this.canvas;
-        const maxRadius = this.maxTreeRadius;
-        const tree = new Tree({x, y, species, growthRate, deathRate, color,
-          canvas, maxRadius});
+        const tree = new Tree(this.getTreeArgs(x, y));
         this.treeArray.push(tree);
         tree.draw();
       }
     }
+  }
+
+  // Get arguments passed to Tree.
+  getTreeArgs(x: number, y: number) {
+    const species = this.getNewTreeSpecies(x, y);
+    const growthRate = this.getGrowthRate(species);
+    const deathRate = this.deathRate;
+    const color = this.getColor(species);
+    const canvas = this.canvas;
+    const maxRadius = this.maxTreeRadius;
+    return {x, y, species, growthRate, deathRate, color, canvas, maxRadius}
   }
 
   // Get all nearest neighbors by exploiting that trees have a maxRadius.
@@ -147,14 +151,15 @@ export default class Forest{
       // Equal weighting of all possible species.
       return Math.floor(Math.random() * this.numberSpecies);
     } else {
-      // First filtering to find all trees within disk of radius 2 * maxRadius
-      // of (x, y). The choice of radius is arbitrary.
+      // First filtering to find all trees within disk of (x, y). The parameter
+      // radius gives rise to different clustering dynamics. With this
+      // implementation, need radius <= 2 * maxRadius.
       const radius = 2 * this.maxTreeRadius;
       const [u, v] = this.getGridCoordinates(x, y);
       const disk = this.treeGrid[u][v].filter(tree => tree.getDistance(x, y) < radius);
 
-      if (disk.length === 0) {
-        return Math.floor(Math.random() * this.numberSpecies);
+      if (disk.length < 10) {  // if few trees, giving fast growth advantage
+        return Math.floor((1 - Math.pow(Math.random(), 6)) * this.numberSpecies);
       } else {
         const parent = this.getRandomTree(disk);
         return parent.species;
@@ -163,12 +168,12 @@ export default class Forest{
   }
 
   // Get random tree from array of trees. Trees weighted according to their
-  // area. The parameter treeArray should not be empty.
+  // size. The parameter treeArray should not be empty.
   getRandomTree(treeArray: Tree[]) {
     if (treeArray.length === 0) {
       throw new Error('Tree array is empty!');
     }
-    // Weighting trees according to area.
+    // Weighting trees according to their area.
     let weights = Array(this.numberSpecies).fill(0);
     const reducer = (w: number[], tree: Tree) => {
       w[tree.species] += tree.area;
@@ -181,6 +186,9 @@ export default class Forest{
 
     const random = Math.random() * weights[weights.length - 1];
     const index = weights.findIndex(w => w > random);
+    if (index === -1) {
+      throw new Error('Something wrong with getRandomTree method!');
+    }
     return treeArray[index];
   }
 

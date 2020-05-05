@@ -48,7 +48,7 @@ export default class Tree {
     if (this.r < this.maxRadius &&
         this.r < this.closestNeighborDistance &&
         this.isContainedInCanvas()) {
-      this.r += Math.sqrt(this.growthRate * Math.random() / 100);
+      this.r += this.growthRate * Math.random() / 10;
     } else {
       this.isGrowing = false;
     }
