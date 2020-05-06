@@ -32,7 +32,7 @@ export default class Forest{
     this.numberSpecies = numberSpecies;
 
     // Some constant
-    this.maxTreeRadius = 50;
+    this.maxTreeRadius = 10;
 
     // Containers holding tree data
     this.treeArray = [];  // will be populated when trees are born
@@ -47,11 +47,11 @@ export default class Forest{
   getColor(species: number) {
     const colors = [
       ['DarkOrange'],
-      ['DarkTurquoise', 'DarkOrange'],
-      ['DarkTurquoise', 'PaleGreen', 'DarkOrange'],
-      ['BlueViolet', 'Turquoise', 'PaleGreen', 'DarkOrange'],
-      ['BlueViolet', 'Turquoise', 'Green', 'Gold', 'DarkOrange'],
-      ['BlueViolet', 'Turquoise', 'Green', 'Gold', 'DarkOrange', 'Firebrick']
+      ['MediumSpringGreen', 'DarkOrange'],
+      ['MediumSpringGreen', 'Yellow', 'DarkOrange'],
+      ['BlueViolet', 'MediumSpringGreen', 'Yellow', 'DarkOrange'],
+      ['BlueViolet', 'MediumSpringGreen', 'Yellow', 'DarkOrange', 'Firebrick'],
+      ['BlueViolet', 'Turquoise', 'MediumSpringGreen', 'Yellow', 'DarkOrange', 'Firebrick']
     ];
     return colors[this.numberSpecies - 1][species];
     //return 'hsl(' + (280 * (1 - rate)).toString() + ', 100%, 50%)';
@@ -104,7 +104,8 @@ export default class Forest{
       const x = Math.random() * this.canvas.width;
       const y = Math.random() * this.canvas.height;
       if (this.noTreePresent(x, y)) {
-        const species = Math.floor(Math.random() * this.numberSpecies);
+        // Giving more likelihood to faster growth trees.
+        const species = Math.floor(Math.pow(Math.random(), 0.5) * this.numberSpecies);
         const tree = new Tree(this.getTreeArgs(x, y, species));
         this.treeArray.push(tree);
         tree.draw();
@@ -116,7 +117,7 @@ export default class Forest{
   birthTrees(birthRate: number) {
     this.treeArray.forEach(tree => {
       if (Math.random() < birthRate * tree.area / Math.pow(10, 5)) {
-        const r = Math.random() * this.maxTreeRadius;
+        const r = 5 * Math.random() * this.maxTreeRadius;
         const theta = Math.random() * 2 * Math.PI;
         const x = tree.x + r * Math.cos(theta);
         const y = tree.y + r * Math.sin(theta);
@@ -175,7 +176,7 @@ export default class Forest{
 
   // Kill all trees in some big circle centered at (x, y)
   clearCut(x: number, y: number) {
-    const radius = Math.min(this.canvas.width, this.canvas.height) / 4;
+    const radius = Math.min(this.canvas.width, this.canvas.height) / 3;
     this.treeArray.forEach(tree => {
       if (tree.getDistance(x, y) < radius) {
         tree.isAlive = false;
@@ -222,7 +223,7 @@ export default class Forest{
   }
 
   // Update all aspects of the forest.
-  update() {
+  update(disaster = false) {
     this.placeRandomSeed();
     this.birthTrees(this.birthRate);
     this.buildTreeGrid();
@@ -230,5 +231,14 @@ export default class Forest{
     this.growTreesInForest();
     this.updateStats();
     this.graphStats();
+
+    // Optional chance of disaster
+    if (disaster) {
+      if (Math.random() < 0.002) {
+        const x = Math.random() * this.canvas.width;
+        const y = Math.random() * this.canvas.height;
+        this.clearCut(x, y);
+      }
+    }
   }
 }

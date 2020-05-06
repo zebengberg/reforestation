@@ -22,4 +22,4 @@ forestCanvas.onclick = event => {
 
 // Animating.
 //document.onkeydown = () => forest.update();  // useful for debugging
-setInterval(() => forest.update(), 10);
+setInterval(() => forest.update(true), 10);

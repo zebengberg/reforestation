@@ -53,6 +53,21 @@ forestCanvas.onclick = event => {
   forest.clearCut(x, y);
 };
 
+
 // Animating.
 // document.onkeydown = () => forest.update();  // useful for debugging
-setInterval(() => forest.update(), 10);
+
+let numIterations = 0;
+function downloadCanvas() {
+  if (++numIterations % 100 === 0) {
+    const link = document.createElement('a');
+    link.download = 'canvas' + numIterations / 100 + '.png';
+    link.href = forestCanvas.toDataURL()
+    link.click();
+  }
+}
+
+setInterval(() => {
+  forest.update();
+  //downloadCanvas();
+}, 10);

@@ -1,35 +1,33 @@
 import Forest from './forest.js';
 import Tree from './tree.js';
 
-
 export default class EvolvingForest extends Forest {
   constructor({forestCanvas, statsCanvas} : {forestCanvas: HTMLCanvasElement,
     statsCanvas: HTMLCanvasElement}) {
-    super({forestCanvas, statsCanvas, birthRate: 5, deathRate: 5,
-      parentCheck: true, numberSpecies: 2});
+    super({forestCanvas, statsCanvas, birthRate: 5, deathRate: 10,
+      parentCheck: true, numberSpecies: 3});
   }
 
   getSpeciesColor(species: number) {
     switch(species) {
       case 0:
         return '#0000C0';
-
       case 1:
+        return '#00C000';
+      case 2:
         return '#C00000';
-
     }
   }
 
   getIndividualColor(species: number, growthRate: number) {
     let hex = Math.floor(128 + growthRate * 128).toString(16);
-
     switch(species) {
       case 0:
         return '#0000' + hex;
-
       case 1:
+        return '#00' + hex + '00';
+      case 2:
         return '#' + hex + '0000';
-
     }
   }
 
@@ -41,7 +39,7 @@ export default class EvolvingForest extends Forest {
     } else {
       // Including random noise -- this enables evolution.
       growthRate = parent.growthRate;
-      growthRate += 0.5 * this.randomNormal();
+      growthRate += 0.1 * this.randomNormal();
       if (growthRate > 1) {
         growthRate = 1;
       } else if (growthRate < 0) {
