@@ -6,7 +6,6 @@ export default class Forest{
   statsCanvas: HTMLCanvasElement;
   birthRate: number;
   deathRate: number;
-  parentCheck: boolean;
   numberSpecies: number;
   maxTreeRadius: number;
   treeArray: Tree[];
@@ -15,10 +14,9 @@ export default class Forest{
   gridHeight: number;
   stats: number[][];
 
-  constructor({forestCanvas, statsCanvas, birthRate, deathRate, parentCheck,
-    numberSpecies}: {forestCanvas: HTMLCanvasElement,
-    statsCanvas: HTMLCanvasElement, birthRate: number, deathRate: number,
-    parentCheck: boolean, numberSpecies: number}) {
+  constructor({forestCanvas, statsCanvas, birthRate, deathRate, numberSpecies}:
+    {forestCanvas: HTMLCanvasElement, statsCanvas: HTMLCanvasElement,
+      birthRate: number, deathRate: number, numberSpecies: number}) {
     // Forest and stat canvas.
     this.canvas = forestCanvas;
     this.context = this.canvas.getContext('2d');
@@ -28,11 +26,10 @@ export default class Forest{
     // Properties taken from HTML sliders.
     this.birthRate = birthRate;
     this.deathRate = deathRate;
-    this.parentCheck = parentCheck;
     this.numberSpecies = numberSpecies;
 
     // Some constant
-    this.maxTreeRadius = 10;
+    this.maxTreeRadius = 6;
 
     // Containers holding tree data
     this.treeArray = [];  // will be populated when trees are born
@@ -48,10 +45,10 @@ export default class Forest{
     const colors = [
       ['DarkOrange'],
       ['MediumSpringGreen', 'DarkOrange'],
-      ['MediumSpringGreen', 'Yellow', 'DarkOrange'],
-      ['BlueViolet', 'MediumSpringGreen', 'Yellow', 'DarkOrange'],
-      ['BlueViolet', 'MediumSpringGreen', 'Yellow', 'DarkOrange', 'Firebrick'],
-      ['BlueViolet', 'Turquoise', 'MediumSpringGreen', 'Yellow', 'DarkOrange', 'Firebrick']
+      ['MediumSpringGreen', 'Gold', 'DarkOrange'],
+      ['BlueViolet', 'MediumSpringGreen', 'Gold', 'DarkOrange'],
+      ['BlueViolet', 'MediumSpringGreen', 'Gold', 'DarkOrange', 'Firebrick'],
+      ['BlueViolet', 'Turquoise', 'MediumSpringGreen', 'Gold', 'DarkOrange', 'Firebrick']
     ];
     return colors[this.numberSpecies - 1][species];
     //return 'hsl(' + (280 * (1 - rate)).toString() + ', 100%, 50%)';
@@ -176,7 +173,7 @@ export default class Forest{
 
   // Kill all trees in some big circle centered at (x, y)
   clearCut(x: number, y: number) {
-    const radius = Math.min(this.canvas.width, this.canvas.height) / 3;
+    const radius = Math.min(this.canvas.width, this.canvas.height) / 4;
     this.treeArray.forEach(tree => {
       if (tree.getDistance(x, y) < radius) {
         tree.isAlive = false;
@@ -202,19 +199,20 @@ export default class Forest{
 
   // Graph the time-series forest statistics on the statCanvas.
   graphStats() {
+    const max = Math.max(...this.stats.flat(), .01);
+    console.log(max)
+
     const c = this.statsCanvas.getContext('2d');
     c.clearRect(0, 0, this.statsCanvas.width, this.statsCanvas.height);
     for (let species = 0; species < this.numberSpecies; species++) {
-      // Arbitrary constant 300 * nTrees to scale the y-values appropriately.
-      // Using max with 1 to prevent graph from going off the canvas.
-      const yValue = (t: number) => Math.max(this.statsCanvas.height -
-        200 * this.numberSpecies * this.stats[t][species], 1);
+      let timeSeries = this.stats.map(areas => areas[species]);
+      timeSeries = timeSeries.map(a => (1 - a / max) * this.statsCanvas.height);
 
       c.beginPath();
       let t = 0;
-      c.moveTo(t, yValue(t));
+      c.moveTo(t, timeSeries[t]);
       for (; t < this.statsCanvas.width; t++) {
-        c.lineTo(t, yValue(t));
+        c.lineTo(t, timeSeries[t]);
       }
       c.lineWidth = 3;
       c.strokeStyle = this.getColor(species);
@@ -234,7 +232,7 @@ export default class Forest{
 
     // Optional chance of disaster
     if (disaster) {
-      if (Math.random() < 0.002) {
+      if (Math.random() < 0.001) {
         const x = Math.random() * this.canvas.width;
         const y = Math.random() * this.canvas.height;
         this.clearCut(x, y);

@@ -4,8 +4,7 @@ import Tree from './tree.js';
 export default class EvolvingForest extends Forest {
   constructor({forestCanvas, statsCanvas} : {forestCanvas: HTMLCanvasElement,
     statsCanvas: HTMLCanvasElement}) {
-    super({forestCanvas, statsCanvas, birthRate: 5, deathRate: 10,
-      parentCheck: true, numberSpecies: 3});
+    super({forestCanvas, statsCanvas, birthRate: 5, deathRate: 10, numberSpecies: 3});
   }
 
   getSpeciesColor(species: number) {
@@ -39,7 +38,7 @@ export default class EvolvingForest extends Forest {
     } else {
       // Including random noise -- this enables evolution.
       growthRate = parent.growthRate;
-      growthRate += 0.1 * this.randomNormal();
+      growthRate += 0.3 * this.randomNormal();
       if (growthRate > 1) {
         growthRate = 1;
       } else if (growthRate < 0) {

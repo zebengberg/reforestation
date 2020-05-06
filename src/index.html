@@ -18,25 +18,32 @@
   <canvas id='forestCanvas'></canvas>
   <canvas id='statsCanvas'></canvas>
 
-  <div id='userInput' style='padding-bottom: 20px;'>
+  <div id='userInput' style='padding-bottom: 20px; font-family: Gill Sans, sans-serif;'>
+    <p>
+      <span style='font-weight: bold;'>Reforestation.</span>
+      Trees grow in a forest. 
+      Warmer colors indicate faster growth, seeding, and death. 
+      Click on the forest to clear cut trees from it. 
+      Make the window smaller if the simulation is too slow. 
+      The plot shows the total area of each species over time. 
+      Read about the details of the model
+      <a target='_blank' href='https://github.com/zebengberg/reforestation'>here</a>.
+      See an attempt at letting species evolve
+      <a href='evolve.html'>here</a>.
+    </p>
     <div>
       <input type='range' id='birthRateSlider' min='0' max='3' value='1.5' step='0.01'>
-      <label for='birthRateSlider'>Birth Rate</label>
+      <label for='birthRateSlider'>Birth Rate (immediate change)</label>
     </div>
 
     <div>
       <input type='range' id='deathRateSlider' min='0' max='4' value='2' step='0.01'>
-      <label for='deathRateSlider'>Death Rate</label>
+      <label for='deathRateSlider'>Death Rate (long-term change)</label>
     </div>
 
     <div>
       <input type='range' id='numberSpeciesSlider' min='1' max='6' value='3'>
       <label for='numberSpeciesSlider'>Number of Species (resets forest)</label>
-    </div>
-
-    <div>
-      <input type='checkbox' id='parentCheckbox' checked>
-      <label for='parentCheckbox'>New tree species determined by neighbors?</label>
     </div>
   </div>
 </body>

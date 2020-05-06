@@ -1,25 +1,23 @@
 import EvolvingForest from './evolvingforest.js';
 
-// Sizing the two canvas objects.
+// Getting the two canvas objects.
 const forestCanvas = <HTMLCanvasElement> document.getElementById('forestCanvas');
-forestCanvas.width = window.innerWidth - 5;
-forestCanvas.height = 0.75 * window.innerHeight;
 const statsCanvas = <HTMLCanvasElement> document.getElementById('statsCanvas');
-statsCanvas.width = window.innerWidth - 5;
-statsCanvas.height = 0.25 * window.innerHeight - 20;
+const description = <HTMLDivElement> document.getElementById('description');
 
 // Creating forest object.
-const forestArgs = {forestCanvas, statsCanvas};
-let forest = new EvolvingForest(forestArgs);
+let forest: EvolvingForest;
+resetForest();
+window.onresize = resetForest;
 
-
-forestCanvas.onclick = event => {
-  const rect = forestCanvas.getBoundingClientRect();
-  const x = event.clientX - rect.left;
-  const y = event.clientY - rect.top;
-  forest.clearCut(x, y);
-};
+function resetForest() {
+  forestCanvas.width = window.innerWidth - 5;
+  forestCanvas.height = 0.75 * (window.innerHeight - description.offsetHeight);
+  statsCanvas.width = window.innerWidth - 5;
+  statsCanvas.height = 0.25 * (window.innerHeight - description.offsetHeight) - 20;
+  forest = new EvolvingForest({forestCanvas, statsCanvas});
+}
 
 // Animating.
-//document.onkeydown = () => forest.update();  // useful for debugging
+// document.onkeydown = () => forest.update();  // useful for debugging
 setInterval(() => forest.update(true), 10);
