@@ -3,21 +3,10 @@ import Tree from './tree.js';
 
 
 export default class EvolvingForest extends Forest {
-
   constructor({forestCanvas, statsCanvas} : {forestCanvas: HTMLCanvasElement,
     statsCanvas: HTMLCanvasElement}) {
-    super({forestCanvas, statsCanvas, birthRate: 1, deathRate: 1,
+    super({forestCanvas, statsCanvas, birthRate: 5, deathRate: 5,
       parentCheck: true, numberSpecies: 2});
-  }
-
-  // Overriding method from parent class.
-  getTreeArgs(x: number, y: number) {
-    const {species, growthRate} = this.getNewTreeGenes(x, y);
-    const deathRate = this.deathRate;
-    const color = this.getIndividualColor(species, growthRate);
-    const canvas = this.canvas;
-    const maxRadius = this.maxTreeRadius;
-    return {x, y, species, growthRate, deathRate, color, canvas, maxRadius}
   }
 
   getSpeciesColor(species: number) {
@@ -33,9 +22,6 @@ export default class EvolvingForest extends Forest {
 
   getIndividualColor(species: number, growthRate: number) {
     let hex = Math.floor(128 + growthRate * 128).toString(16);
-    if (hex.length < 2) {
-      hex = '0' + hex;
-    }
 
     switch(species) {
       case 0:
@@ -48,29 +34,25 @@ export default class EvolvingForest extends Forest {
   }
 
   // Overriding method from parent class.
-  getNewTreeGenes(x: number, y: number) {
-    const radius = 2 * this.maxTreeRadius;
-    const [u, v] = this.getGridCoordinates(x, y);
-    const disk = this.treeGrid[u][v].filter(tree => tree.getDistance(x, y) < radius);
-
-    let species: number, growthRate: number;
-    if (disk.length < 5) {  // if few trees, giving every species equal chance.
-      species = Math.floor(Math.random() * this.numberSpecies);
+  getTreeArgs(x: number, y: number, species: number, parent: Tree = null) {
+    let growthRate: number;
+    if (parent === null) {
       growthRate = this.getGrowthRate(species);
     } else {
-      const parent = this.getRandomTree(disk);
-      species = parent.species;
+      // Including random noise -- this enables evolution.
       growthRate = parent.growthRate;
+      growthRate += 0.5 * this.randomNormal();
+      if (growthRate > 1) {
+        growthRate = 1;
+      } else if (growthRate < 0) {
+        growthRate = 0;
+      }
     }
-
-    // Including random noise -- this enables evolution.
-    growthRate += 0.5 * this.randomNormal();
-    if (growthRate > 1) {
-      growthRate = 1;
-    } else if (growthRate < 0) {
-      growthRate = 0;
-    }
-    return {species, growthRate};
+    const deathRate = this.deathRate;
+    const color = this.getIndividualColor(species, growthRate);
+    const canvas = this.canvas;
+    const maxRadius = this.maxTreeRadius;
+    return {x, y, species, growthRate, deathRate, color, canvas, maxRadius}
   }
 
   // Uses Box-Muller to get random normal with mean 0 and standard deviation 1.
@@ -80,10 +62,14 @@ export default class EvolvingForest extends Forest {
     return Math.sqrt(-2 * Math.log(s)) * Math.cos(2 * Math.PI * t);
   }
 
-  // Calculate the average growth rate of species within array.
-  getAverageGrowthRate(array: Tree[]) {
-    const sum = array.reduce((acc, tree) => acc + tree.growthRate, 0);
-    return sum / array.length;
+  // Calculate the average growth rate of species across forest.
+  getAverageGrowthRate(species: number) {
+    const speciesArray = this.treeArray.filter(tree => tree.species === species);
+    const sum = speciesArray.reduce((acc, tree) => acc + tree.growthRate, 0);
+    if (sum === 0) {
+      return this.getGrowthRate(species);  // default from Forest
+    }
+    return sum / speciesArray.length;
   }
 
   // Overriding method from parent class.
@@ -92,7 +78,7 @@ export default class EvolvingForest extends Forest {
     const averageGrowthRates = [];
     for (let species = 0; species < this.numberSpecies; species++) {
       const speciesArray = this.treeArray.filter(tree => tree.species === species);
-      averageGrowthRates.push(this.getAverageGrowthRate(speciesArray));
+      averageGrowthRates.push(this.getAverageGrowthRate(species));
     }
     this.stats.push(averageGrowthRates);
   }

@@ -32,7 +32,7 @@ export default class Forest{
     this.numberSpecies = numberSpecies;
 
     // Some constant
-    this.maxTreeRadius = 30;
+    this.maxTreeRadius = 50;
 
     // Containers holding tree data
     this.treeArray = [];  // will be populated when trees are born
@@ -88,26 +88,49 @@ export default class Forest{
     });
   }
 
-  // Birth up to n new trees if space is available.
-  birthTree(n: number = 1) {
-    for (let i = 0; i < n; i++) {
+  isContainedInCanvas(x: number, y: number) {
+    return x >= 0 && x <= this.canvas.width && y >= 0 && y <= this.canvas.height;
+  }
+
+  // Checking if a tree is present at (x, y)
+  noTreePresent(x: number, y: number) {
+    const pixel = this.context.getImageData(x, y, 1, 1);
+    return pixel.data[0] + pixel.data[1] + pixel.data[2] > 750;
+  }
+
+  // Placing a random seed on the forest floor
+  placeRandomSeed() {
+    if (Math.random() < 0.05) {
       const x = Math.random() * this.canvas.width;
       const y = Math.random() * this.canvas.height;
-
-      // Determining if there is already a tree at (x, y)
-      const pixel = this.context.getImageData(x, y, 1, 1);
-      const colorSum = pixel.data[0] + pixel.data[1] + pixel.data[2];
-      if (colorSum > 750) {  // no currently existing tree at (x, y)
-        const tree = new Tree(this.getTreeArgs(x, y));
+      if (this.noTreePresent(x, y)) {
+        const species = Math.floor(Math.random() * this.numberSpecies);
+        const tree = new Tree(this.getTreeArgs(x, y, species));
         this.treeArray.push(tree);
         tree.draw();
       }
     }
   }
 
-  // Get arguments passed to Tree.
-  getTreeArgs(x: number, y: number) {
-    const species = this.getNewTreeSpecies(x, y);
+  // Let each tree birth new trees
+  birthTrees(birthRate: number) {
+    this.treeArray.forEach(tree => {
+      if (Math.random() < birthRate * tree.area / Math.pow(10, 5)) {
+        const r = Math.random() * this.maxTreeRadius;
+        const theta = Math.random() * 2 * Math.PI;
+        const x = tree.x + r * Math.cos(theta);
+        const y = tree.y + r * Math.sin(theta);
+        if (this.noTreePresent(x, y) && this.isContainedInCanvas(x, y)) {
+          const baby = new Tree(this.getTreeArgs(x, y, tree.species, tree));
+          this.treeArray.push(baby);
+          baby.draw();
+        }
+      }
+    })
+  }
+
+  // Get arguments passed to Tree. Optional argument for subclass override.
+  getTreeArgs(x: number, y: number, species: number, parent: Tree = null) {
     const growthRate = this.getGrowthRate(species);
     const deathRate = this.deathRate;
     const color = this.getColor(species);
@@ -142,54 +165,6 @@ export default class Forest{
       tree.alive();
       tree.draw();
     });
-  }
-
-  // Determine a new tree's species based on neighboring tree's species.
-  getNewTreeSpecies(x: number, y: number) {
-    let species;
-    if (!this.parentCheck) {
-      // Equal weighting of all possible species.
-      return Math.floor(Math.random() * this.numberSpecies);
-    } else {
-      // First filtering to find all trees within disk of (x, y). The parameter
-      // radius gives rise to different clustering dynamics. With this
-      // implementation, need radius <= 2 * maxRadius.
-      const radius = 2 * this.maxTreeRadius;
-      const [u, v] = this.getGridCoordinates(x, y);
-      const disk = this.treeGrid[u][v].filter(tree => tree.getDistance(x, y) < radius);
-
-      if (disk.length < 10) {  // if few trees, giving fast growth advantage
-        return Math.floor((1 - Math.pow(Math.random(), 6)) * this.numberSpecies);
-      } else {
-        const parent = this.getRandomTree(disk);
-        return parent.species;
-      }
-    }
-  }
-
-  // Get random tree from array of trees. Trees weighted according to their
-  // size. The parameter treeArray should not be empty.
-  getRandomTree(treeArray: Tree[]) {
-    if (treeArray.length === 0) {
-      throw new Error('Tree array is empty!');
-    }
-    // Weighting trees according to their area.
-    let weights = Array(this.numberSpecies).fill(0);
-    const reducer = (w: number[], tree: Tree) => {
-      w[tree.species] += tree.area;
-      return w;
-    };
-    weights = treeArray.reduce(reducer, weights);
-
-    const cumulativeSum = (sum => (value: number) => sum += value)(0);
-    weights = weights.map(cumulativeSum);
-
-    const random = Math.random() * weights[weights.length - 1];
-    const index = weights.findIndex(w => w > random);
-    if (index === -1) {
-      throw new Error('Something wrong with getRandomTree method!');
-    }
-    return treeArray[index];
   }
 
   // Reset forest canvas; call before letting this forest be garbage collected.
@@ -248,8 +223,9 @@ export default class Forest{
 
   // Update all aspects of the forest.
   update() {
+    this.placeRandomSeed();
+    this.birthTrees(this.birthRate);
     this.buildTreeGrid();
-    this.birthTree(this.birthRate);
     this.setClosestNeighborDistance();
     this.growTreesInForest();
     this.updateStats();

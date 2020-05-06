@@ -29,8 +29,8 @@ updateForestProperties();
 
 // Callback functions.
 function updateForestProperties() {
-  forest.birthRate = Math.pow(3, +birthRateSlider.value) - 2;
-  forest.deathRate = Math.pow(3, +deathRateSlider.value) - 2;
+  forest.birthRate = Math.pow(3, +birthRateSlider.value) - 1;
+  forest.deathRate = Math.pow(3, +deathRateSlider.value) - 1;
   forest.parentCheck = parentCheckbox.checked;
   forest.treeArray.forEach(tree => tree.deathRate = forest.deathRate);
 }

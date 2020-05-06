@@ -48,7 +48,7 @@ export default class Tree {
     if (this.r < this.maxRadius &&
         this.r < this.closestNeighborDistance &&
         this.isContainedInCanvas()) {
-      this.r += this.growthRate * Math.random() / 10;
+      this.r +=  this.growthRate * Math.random() / 10;
     } else {
       this.isGrowing = false;
     }
@@ -57,7 +57,7 @@ export default class Tree {
   // Determine if the tree is alive.
   alive() {
     // A faster growing tree has a higher probability of dying.
-    this.deathProb += this.deathRate * this.growthRate / Math.pow(10, 6);
+    this.deathProb += this.deathRate * Math.pow(this.growthRate, 2) / Math.pow(10, 6);
     this.isAlive = Math.random() > this.deathProb;
   }
 
