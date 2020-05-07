@@ -1,10 +1,8 @@
 export default class Tree {
-    constructor({ x, y, u, v, species, color, growthRate, deathRate, maxRadius, canvas }) {
+    constructor({ x, y, species, color, growthRate, deathRate, maxRadius, canvas }) {
         // Getting properties from forest.
         this.x = x;
         this.y = y;
-        this.u = u;
-        this.v = v;
         this.species = species;
         this.color = color;
         this.growthRate = growthRate;
@@ -30,7 +28,7 @@ export default class Tree {
         if (this.r < this.maxRadius &&
             this.r < this.closestNeighborDistance &&
             this.isContainedInCanvas()) {
-            this.r += Math.sqrt(this.growthRate * Math.random() / 100);
+            this.r += this.growthRate * Math.random() / 10;
         }
         else {
             this.isGrowing = false;
@@ -39,7 +37,7 @@ export default class Tree {
     // Determine if the tree is alive.
     alive() {
         // A faster growing tree has a higher probability of dying.
-        this.deathProb += this.deathRate * this.growthRate / Math.pow(10, 6);
+        this.deathProb += this.deathRate * Math.pow(this.growthRate, 2) / Math.pow(10, 6);
         this.isAlive = Math.random() > this.deathProb;
     }
     // Draw a tree if alive; draw a blank circle if dead.
