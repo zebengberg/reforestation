@@ -62,7 +62,4 @@ function downloadCanvas() {
 
 // Animating.
 // document.onkeydown = () => forest.update();  // useful for debugging
-setInterval(() => {
-  forest.update();
-  //downloadCanvas();
-}, 10);
+setInterval(() => forest.update(), 10);

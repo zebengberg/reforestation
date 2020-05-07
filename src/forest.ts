@@ -111,9 +111,9 @@ export default class Forest{
   }
 
   // Let each tree birth new trees
-  birthTrees(birthRate: number) {
+  birthTrees() {
     this.treeArray.forEach(tree => {
-      if (Math.random() < birthRate * tree.area / Math.pow(10, 5)) {
+      if (Math.random() < this.birthRate * tree.area / Math.pow(10, 5)) {
         const r = 5 * Math.random() * this.maxTreeRadius;
         const theta = Math.random() * 2 * Math.PI;
         const x = tree.x + r * Math.cos(theta);
@@ -173,7 +173,7 @@ export default class Forest{
 
   // Kill all trees in some big circle centered at (x, y)
   clearCut(x: number, y: number) {
-    const radius = Math.min(this.canvas.width, this.canvas.height) / 4;
+    const radius = Math.min(this.canvas.width, this.canvas.height) / 2;
     this.treeArray.forEach(tree => {
       if (tree.getDistance(x, y) < radius) {
         tree.isAlive = false;
@@ -223,7 +223,7 @@ export default class Forest{
   // Update all aspects of the forest.
   update(disaster = false) {
     this.placeRandomSeed();
-    this.birthTrees(this.birthRate);
+    this.birthTrees();
     this.buildTreeGrid();
     this.setClosestNeighborDistance();
     this.growTreesInForest();
@@ -231,12 +231,10 @@ export default class Forest{
     this.graphStats();
 
     // Optional chance of disaster
-    if (disaster) {
-      if (Math.random() < 0.001) {
-        const x = Math.random() * this.canvas.width;
-        const y = Math.random() * this.canvas.height;
-        this.clearCut(x, y);
-      }
+    if (disaster && Math.random() < 0.001) {
+      const x = Math.random() * this.canvas.width;
+      const y = Math.random() * this.canvas.height;
+      this.clearCut(x, y);
     }
   }
 }
